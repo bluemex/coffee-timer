@@ -202,7 +202,7 @@
 
             useEffect(() => {
                 if (isActive) {
-                    timerIntervalRef.current = setInterval(() => setSeconds(s => s + 15), 1000);
+                    timerIntervalRef.current = setInterval(() => setSeconds(s => s + 1), 1000);
                 } else {
                     clearInterval(timerIntervalRef.current);
                 }
