@@ -1,6 +1,7 @@
 # 手沖職人指南：四六沖法 + 花朵繞法 (Coffee Timer)
 
 [![Live Demo](https://img.shields.io/badge/Website-Live%20Demo-blue?style=for-the-badge&logo=coffeescript)](https://coffee-timer.yooneko.com/)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Demo-blue?style=for-the-badge&logo=github)](https://bluemex.github.io/coffee-timer/)
 
 這是一個專為咖啡愛好者設計的網頁版手沖計時器。結合了著名的 **Tetsu Kasuya 4:6 沖煮法** 與獨特的 **花朵繞法 (Flower Pouring)** 技術，透過視覺化的動態圖表與分段計時，引導使用者精準完成每一階段的萃取。
 
