@@ -1100,106 +1100,111 @@
                                 )}
 
                                 {/* 核心計時顯示與操作按鈕列 */}
-                                <div className={`flex items-center justify-between transition-all duration-500 ${isActive ? 'gap-3' : 'flex-row gap-2 sm:gap-6'}`}>
-                                    <div className={`flex items-center transition-all duration-500 ${isActive ? 'gap-3' : 'flex-1 flex-col items-start gap-0.5'}`}>
-                                        {isActive && (
-                                            <div className={`w-2.5 h-2.5 rounded-full hidden sm:block ${isStageEndingSoon ? 'bg-red-400 animate-ping' : 'bg-amber-400 animate-pulse'}`} />
-                                        )}
-                                        <div className="flex flex-col">
+                                <div className="flex items-center justify-between gap-2 sm:gap-4">
+                                    <div className="flex flex-col min-w-0">
+                                        {/* 狀態微標籤列 (固定在計時數字正上方，絕不與右側按鈕擠壓斷行) */}
+                                        <div className="flex items-center gap-1.5 mb-1">
                                             {!isActive && (
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-[10px] uppercase tracking-widest text-stone-400 font-bold whitespace-nowrap">Brewing Timer</span>
+                                                <React.Fragment>
+                                                    <span className="text-[10px] uppercase tracking-widest text-stone-400 font-bold whitespace-nowrap">
+                                                        {seconds > 0 ? 'Timer Paused' : 'Brewing Timer'}
+                                                    </span>
                                                     <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full bg-stone-700/70 text-amber-400/90 font-semibold whitespace-nowrap">
                                                         {flavorLabelMap[flavorMode]}
                                                     </span>
-                                                </div>
+                                                </React.Fragment>
                                             )}
-                                            <div className="flex items-baseline gap-2 flex-wrap">
-                                                <span className={`font-mono font-extrabold leading-none transition-all duration-500 ${
-                                                    isActive ? 'text-2xl sm:text-3xl text-amber-400' : 'text-4xl sm:text-5xl text-stone-100'
-                                                }`}>
-                                                    {formatTime(seconds)}
-                                                </span>
 
-                                                {isActive && !isFinished && (
-                                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                                        <span className="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase whitespace-nowrap">
-                                                            Stage {currentStageIdx + 1}/5
-                                                        </span>
-                                                        <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-md border whitespace-nowrap ${
-                                                            isStageEndingSoon
-                                                                ? 'bg-red-500/20 text-red-300 border-red-500/40 animate-pulse'
-                                                                : 'bg-stone-800 text-stone-300 border-stone-700'
-                                                        }`}>
-                                                            倒數 {stageRemaining}s
-                                                        </span>
-                                                        <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-stone-800/90 text-amber-400 border border-stone-700 whitespace-nowrap">
-                                                            <Icon name="droplet" size={11} />
-                                                            目標秤重 {stages[currentStageIdx].cumulativeWater}ml
-                                                        </span>
-                                                    </div>
-                                                )}
-
-                                                {isFinished && (
-                                                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase animate-pulse">
-                                                        Brew Complete
+                                            {isActive && !isFinished && (
+                                                <React.Fragment>
+                                                    <span className={`w-2 h-2 rounded-full shrink-0 ${isStageEndingSoon ? 'bg-red-400 animate-ping' : 'bg-amber-400 animate-pulse'}`} />
+                                                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase whitespace-nowrap">
+                                                        Stage {currentStageIdx + 1}/5
                                                     </span>
-                                                )}
-                                            </div>
+                                                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border whitespace-nowrap ${
+                                                        isStageEndingSoon
+                                                            ? 'bg-red-500/20 text-red-300 border-red-500/40 animate-pulse'
+                                                            : 'bg-stone-800 text-stone-300 border-stone-700'
+                                                    }`}>
+                                                        倒數 {stageRemaining}s
+                                                    </span>
+                                                </React.Fragment>
+                                            )}
+
+                                            {isFinished && (
+                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase animate-pulse whitespace-nowrap">
+                                                    Brew Complete
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* 主計時數字 */}
+                                        <div className="flex items-baseline gap-2.5">
+                                            <span className={`font-mono font-extrabold leading-none transition-all duration-300 whitespace-nowrap ${
+                                                isActive ? 'text-3xl sm:text-4xl text-amber-400' : 'text-4xl sm:text-5xl text-stone-100'
+                                            }`}>
+                                                {formatTime(seconds)}
+                                            </span>
+                                            {isActive && !isFinished && (
+                                                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-stone-800/90 text-amber-400 border border-stone-700 whitespace-nowrap">
+                                                    <Icon name="droplet" size={11} />
+                                                    目標秤重 {stages[currentStageIdx].cumulativeWater}ml
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
 
-                                    {/* 音效切換、重置、開始/暫停控制鍵 */}
+                                    {/* 音效切換、重置、下一段、開始/暫停控制鍵 */}
                                     <div className="flex gap-1.5 sm:gap-2 items-center shrink-0">
                                         <button
                                             onClick={() => setSoundEnabled(!soundEnabled)}
                                             title={soundEnabled ? "關閉階段提示音" : "開啟階段提示音"}
                                             aria-label={soundEnabled ? "關閉階段提示音" : "開啟階段提示音"}
-                                            className={`rounded-full flex items-center justify-center transition-all border ${
+                                            className={`rounded-full flex items-center justify-center transition-all border shrink-0 ${
                                                 soundEnabled
                                                     ? 'bg-stone-700/80 border-amber-500/40 text-amber-400 hover:bg-stone-700'
                                                     : 'bg-stone-800/80 border-stone-700 text-stone-500 hover:text-stone-300'
-                                            } ${isActive ? 'p-2' : 'p-2.5 sm:p-3'}`}
+                                            } ${isActive ? 'w-8 h-8 sm:w-9 sm:h-9' : 'w-9 h-9 sm:w-10 sm:h-10'}`}
                                         >
-                                            <Icon name={soundEnabled ? "volume-2" : "volume-x"} size={isActive ? 15 : 17} />
+                                            <Icon name={soundEnabled ? "volume-2" : "volume-x"} size={isActive ? 14 : 16} />
                                         </button>
 
                                         <button
                                             onClick={resetTimer}
                                             title="重置計時器"
                                             aria-label="重置計時器"
-                                            className={`rounded-full flex items-center justify-center transition-all border border-stone-700 ${
+                                            className={`rounded-full flex items-center justify-center transition-all border border-stone-700 shrink-0 ${
                                                 isActive
-                                                    ? 'p-2 bg-stone-800 text-stone-400 hover:text-white hover:bg-stone-700'
-                                                    : 'p-2.5 sm:p-3 bg-stone-700/80 text-stone-300 hover:bg-stone-600 hover:text-white'
+                                                    ? 'w-8 h-8 sm:w-9 sm:h-9 bg-stone-800 text-stone-400 hover:text-white hover:bg-stone-700'
+                                                    : 'w-9 h-9 sm:w-10 sm:h-10 bg-stone-700/80 text-stone-300 hover:bg-stone-600 hover:text-white'
                                             }`}
                                         >
-                                            <Icon name="rotate-ccw" size={isActive ? 15 : 17} />
+                                            <Icon name="rotate-ccw" size={isActive ? 14 : 16} />
                                         </button>
 
-                                        {(isActive || seconds > 0) && !isFinished && (
+                                        {isActive && !isFinished && (
                                             <button
                                                 onClick={skipToNextStage}
                                                 title={currentStageIdx < 4 ? `跳至第 ${currentStageIdx + 2} 等分` : "直接完成沖煮"}
                                                 aria-label={currentStageIdx < 4 ? `跳至第 ${currentStageIdx + 2} 等分` : "直接完成沖煮"}
-                                                className="rounded-full px-3 sm:px-3.5 py-2 bg-stone-700/90 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 transition-all active:scale-95 flex items-center gap-1 text-[11px] sm:text-xs font-bold shadow whitespace-nowrap"
+                                                className="rounded-full px-2.5 sm:px-3.5 py-2 bg-stone-700/90 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 transition-all active:scale-95 flex items-center gap-1 text-[11px] sm:text-xs font-bold shadow whitespace-nowrap shrink-0"
                                             >
-                                                <Icon name="skip-forward" size={13} />
+                                                <Icon name="skip-forward" size={12} />
                                                 <span>{currentStageIdx < 4 ? '下一段' : '完成'}</span>
                                             </button>
                                         )}
 
                                         <button
                                             onClick={toggleTimer}
-                                            className={`rounded-full shadow-lg transition-all active:scale-95 flex items-center gap-1.5 sm:gap-2 font-black whitespace-nowrap ${
+                                            className={`rounded-full shadow-lg transition-all active:scale-95 flex items-center gap-1.5 font-black whitespace-nowrap shrink-0 ${
                                                 isActive
                                                     ? isFinished
-                                                        ? 'bg-amber-500 px-4 sm:px-6 py-2 text-xs text-stone-900 animate-pulse'
-                                                        : 'bg-red-500 hover:bg-red-600 px-4 sm:px-6 py-2 text-xs text-white'
-                                                    : 'bg-gradient-to-r from-amber-600 to-amber-500 px-5 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-sm text-white hover:from-amber-500 hover:to-amber-400 shadow-amber-900/30'
+                                                        ? 'bg-amber-500 px-3.5 sm:px-5 py-2 text-xs text-stone-900 animate-pulse'
+                                                        : 'bg-red-500 hover:bg-red-600 px-3.5 sm:px-5 py-2 text-xs text-white'
+                                                    : 'bg-gradient-to-r from-amber-600 to-amber-500 px-4 sm:px-7 py-2.5 sm:py-3 text-xs sm:text-sm text-white hover:from-amber-500 hover:to-amber-400 shadow-amber-900/30'
                                             }`}
                                         >
-                                            <Icon name={isActive ? (isFinished ? "rotate-ccw" : "pause") : "play"} size={isActive ? 14 : 17} />
+                                            <Icon name={isActive ? (isFinished ? "rotate-ccw" : "pause") : "play"} size={isActive ? 13 : 16} />
                                             <span>{isActive ? (isFinished ? '完成沖煮' : '暫停') : (seconds > 0 ? '繼續沖煮' : '開始沖煮')}</span>
                                         </button>
                                     </div>
@@ -1235,16 +1240,16 @@
 
                                         {/* 手機版即時目標秤重 + 沖煮儀表板即時重選風味配比 */}
                                         {!isFinished && (
-                                            <div className="flex items-center justify-between gap-2 flex-wrap text-[11px] text-stone-300 pt-0.5">
-                                                <span className="flex items-center gap-1.5 font-mono font-bold text-amber-300">
-                                                    <Icon name="droplet" size={12} />
-                                                    本段 +{stages[currentStageIdx].pourAmount}ml → 秤重目標 {stages[currentStageIdx].cumulativeWater}ml
+                                            <div className="flex items-center justify-between gap-1.5 text-[11px] text-stone-300 pt-0.5">
+                                                <span className="flex items-center gap-1 font-mono font-bold text-amber-300 whitespace-nowrap">
+                                                    <Icon name="droplet" size={11} />
+                                                    +{stages[currentStageIdx].pourAmount}ml → 目標 {stages[currentStageIdx].cumulativeWater}ml
                                                 </span>
-                                                <div className="flex items-center gap-1 bg-stone-800/90 p-0.5 rounded-lg border border-stone-700/80">
+                                                <div className="flex items-center gap-0.5 bg-stone-800/90 p-0.5 rounded-lg border border-stone-700/80 shrink-0">
                                                     {[
-                                                        { id: 'acidity', short: `酸感 ${current.range.max}ml` },
-                                                        { id: 'standard', short: `平衡 ${current.perStage}ml` },
-                                                        { id: 'sweetness', short: `甜感 ${current.range.min}ml` }
+                                                        { id: 'acidity', short: '酸感' },
+                                                        { id: 'standard', short: '平衡' },
+                                                        { id: 'sweetness', short: '甜感' }
                                                     ].map(opt => (
                                                         <button
                                                             key={opt.id}
@@ -1354,9 +1359,9 @@
                                                 isDone={isDone}
                                             />
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex justify-between items-center mb-1.5 gap-2 flex-wrap">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                                                <div className="flex justify-between items-center mb-1.5 gap-1.5">
+                                                    <div className="flex items-center gap-1.5 min-w-0">
+                                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap shrink-0 ${
                                                             isCurrent
                                                                 ? 'bg-amber-600 text-white shadow-sm'
                                                                 : isDone
@@ -1367,31 +1372,33 @@
                                                         }`}>
                                                             Stage {idx + 1}
                                                         </span>
-                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap shrink-0 ${
                                                             idx < 2
                                                                 ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
                                                                 : 'bg-stone-100 text-stone-600 border border-stone-200/60'
                                                         }`}>
                                                             {stage.phaseTag}
                                                         </span>
-                                                        {isCurrent && (
-                                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-800 animate-pulse">
-                                                                {stageElapsed < 15 ? '💧 注水繞圈中' : '⏳ 等待滴濾流乾'}
-                                                            </span>
-                                                        )}
                                                     </div>
-                                                    <span className={`font-mono text-xs font-bold ${
+                                                    <span className={`font-mono text-[11px] font-bold whitespace-nowrap shrink-0 ${
                                                         isCurrent ? 'text-amber-700' : 'text-stone-400'
                                                     }`}>
                                                         {stage.time}
                                                     </span>
                                                 </div>
 
-                                                <h3 className={`font-bold text-base sm:text-lg mb-2 ${
-                                                    isCurrent ? 'text-amber-950' : 'text-stone-900'
-                                                }`}>
-                                                    {stage.title}
-                                                </h3>
+                                                <div className="flex items-center justify-between gap-2 mb-2">
+                                                    <h3 className={`font-bold text-base sm:text-lg truncate ${
+                                                        isCurrent ? 'text-amber-950' : 'text-stone-900'
+                                                    }`}>
+                                                        {stage.title}
+                                                    </h3>
+                                                    {isCurrent && (
+                                                        <span className="hidden sm:inline-flex text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-800 animate-pulse whitespace-nowrap shrink-0">
+                                                            {stageElapsed < 15 ? '💧 注水繞圈中' : '⏳ 等待滴濾流乾'}
+                                                        </span>
+                                                    )}
+                                                </div>
 
                                                 <div className={`pl-3.5 border-l-[3px] py-0.5 ${
                                                     isCurrent ? 'border-amber-500' : isPreview ? 'border-amber-300' : 'border-stone-200'
@@ -1405,8 +1412,8 @@
                                             </div>
                                         </div>
 
-                                        <div className="mt-4 flex justify-between items-center gap-2 flex-wrap">
-                                            <div className={`text-xs sm:text-[11px] font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1.5 ${
+                                        <div className="mt-4 flex justify-between items-center gap-2">
+                                            <div className={`text-xs sm:text-[11px] font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1.5 whitespace-nowrap ${
                                                 isCurrent
                                                     ? 'bg-amber-200/90 text-amber-950 shadow-sm'
                                                     : isPreview
@@ -1416,10 +1423,8 @@
                                                 <Icon name="droplet" size={12} className={isCurrent || isPreview ? "text-amber-700" : "text-stone-400"} />
                                                 <span>{stage.detail}</span>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className={`text-xs sm:text-[11px] italic font-medium ${
-                                                    isCurrent ? 'text-amber-700 font-semibold' : 'text-stone-400'
-                                                }`}>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <div className={`${isCurrent ? 'hidden sm:block text-amber-700 font-semibold' : 'text-stone-400'} text-xs sm:text-[11px] italic font-medium whitespace-nowrap`}>
                                                     {stage.effect}
                                                 </div>
                                                 {isCurrent && (
@@ -1429,7 +1434,7 @@
                                                             e.stopPropagation();
                                                             skipToNextStage();
                                                         }}
-                                                        className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-600 hover:bg-amber-500 text-white shadow-sm transition-all active:scale-95"
+                                                        className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-600 hover:bg-amber-500 text-white shadow-sm transition-all active:scale-95 whitespace-nowrap shrink-0"
                                                     >
                                                         <span>{idx < 4 ? '跳至下一段' : '完成沖煮'}</span>
                                                         <Icon name="skip-forward" size={11} />
@@ -1442,7 +1447,7 @@
                                                             e.stopPropagation();
                                                             jumpToStage(idx);
                                                         }}
-                                                        className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-stone-100 hover:bg-amber-100 text-stone-500 hover:text-amber-800 border border-stone-200 transition-all"
+                                                        className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-stone-100 hover:bg-amber-100 text-stone-500 hover:text-amber-800 border border-stone-200 transition-all whitespace-nowrap shrink-0"
                                                     >
                                                         <span>跳至此段</span>
                                                     </button>
