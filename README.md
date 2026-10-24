@@ -11,15 +11,17 @@
 
 ## ✨ 核心功能
 
-*   **4:6 沖煮法邏輯：** 自動將沖煮過程分為五個階段，每段固定 45 秒。
-    *   **前兩段 (40%)：** 定調風味，可調整水量比例來強化「酸感」或「甜感」。
+*   **4:6 沖煮法邏輯與互動式酸甜配比：** 自動將沖煮過程分為五個階段，每段固定 45 秒。
+    *   **前兩段 (40%)：** 定調風味，支援一鍵切換「酸感偏好 (+25%)」、「標準平衡」、「甜感偏好 (-25%)」，並自動連動計算第一、二段注水量。
     *   **後三段 (60%)：** 調整濃度（TDS）與咖啡主體的厚實度。
-*   **動態 SVG 視覺引導：** 每個階段配有專屬的動態圖解（如中心注水、花瓣式繞圈、動力對流繞法），即時顯示注水路徑。
+*   **俯視 V60 濾杯動態 SVG 視覺引導：** 每個階段配有專屬的擬真濾杯肋骨與注水軌跡動畫（阿基米德螺旋繞圈、五元硬幣中心漣漪、八瓣花朵巡航繞法、雙向動力對流旋渦），待機時亦可點擊任意階段卡片即時預覽動畫。
+*   **雙軌進度條與換段預告：** Sticky 毛玻璃頂部面板提供五階段膠囊進度軌、本段 45 秒倒數、即時目標秤重提示，以及換段前 5 秒閃爍預告。
+*   **Web Audio 職人頌缽提示音 & 螢幕恆亮 (Wake Lock)：** 內建零外部依賴的合成和弦提示音（可切換靜音）與自動防休眠恆亮保護。
 *   **智慧自動捲動：** 隨著計時進行，畫面會自動平滑捲動至當前進行中的沖煮階段，方便使用者空出雙手專注注水。
 *   **內建快速預設：** 提供兩組標準參數：
     *   **300ml (標準)：** 使用 20g 咖啡粉。
     *   **600ml (大分量)：** 使用 35g 咖啡粉。
-*   **即時職人語錄：** 沖煮過程中隨機顯示激勵語錄，提升沖煮過程的儀式感。
+*   **即時職人語錄：** 沖煮過程中即時顯示當前階段的激勵語錄，提升沖煮過程的儀式感。
 *   **PWA 行動裝置優化：** 支援「加入主畫面」，提供全螢幕、如 App 般的直覺操作介面。
 
 ---
@@ -47,11 +49,16 @@
 npx serve public
 ```
 
-### 部署至 Firebase
+### 部署至 Firebase (手動或 GitHub Actions 自動部署)
+本地手動部署：
 ```bash
-cd coffee-timer
-firebase deploy --only hosting
+npx -y firebase-tools@latest deploy --only hosting
 ```
+
+GitHub Actions 自動部署：
+當推送到 `main` 分支時，`.github/workflows/deploy.yml` 會自動部署至 Firebase Hosting (`coffee-timer-66ed2`)。請確保在 GitHub Repository 的 **Settings > Secrets and variables > Actions** 中設定以下任一 Secret：
+- `FIREBASE_SERVICE_ACCOUNT_COFFEE_TIMER_66ED2`（推薦：透過 `npx -y firebase-tools@latest init hosting:github` 自動建立之 Service Account JSON）
+- 或 `FIREBASE_TOKEN`（透過 `npx -y firebase-tools@latest login:ci` 取得之 CI Token）
 
 ---
 
@@ -59,11 +66,13 @@ firebase deploy --only hosting
 
 ```
 coffee-timer/
+├── .github/workflows/
+│   └── deploy.yml       # GitHub Actions 自動部署至 Firebase Hosting
 ├── public/              # 靜態檔案目錄
-│   ├── index.html       # 核心 SPA (React + Tailwind + 邏輯)
+│   ├── index.html       # 核心 SPA (React + Tailwind + SVG 動畫邏輯)
 │   └── favicon.png      # 網站圖示 & App Icon
-├── .firebaserc          # Firebase 專案配置
-├── firebase.json        # Firebase Hosting 與 Redirects 配置
+├── .firebaserc          # Firebase 專案配置 (coffee-timer-66ed2)
+├── firebase.json        # Firebase Hosting 與快取標頭配置
 ├── GEMINI.md            # AI 助理開發指南
 └── README.md            # 本檔案
 ```

@@ -1,0 +1,44 @@
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'public/**'
+      - 'index.html'
+      - 'firebase.json'
+      - '.firebaserc'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy-hosting:
+    name: Deploy to Firebase Hosting
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_COFFEE_TIMER_66ED2 }}
+      FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Deploy via Firebase Service Account
+        if: env.FIREBASE_SA != ''
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_COFFEE_TIMER_66ED2 }}
+          channelId: live
+          projectId: coffee-timer-66ed2
+
+      - name: Deploy via Firebase CI Token (Fallback)
+        if: env.FIREBASE_SA == '' && env.FIREBASE_TOKEN != ''
+        run: |
+          npx firebase-tools deploy --only hosting --project coffee-timer-66ed2 --token "${{ secrets.FIREBASE_TOKEN }}"
+
+      - name: Verify Deployment Credentials
+        if: env.FIREBASE_SA == '' && env.FIREBASE_TOKEN == ''
+        run: |
+          echo "::error::Missing Firebase deployment credentials! Please configure FIREBASE_SERVICE_ACCOUNT_COFFEE_TIMER_66ED2 or FIREBASE_TOKEN in GitHub Repository Secrets."
+          exit 1

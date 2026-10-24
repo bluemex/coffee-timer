@@ -31,12 +31,14 @@ This project uses a "Single-File React-in-HTML" architecture, eliminating the ne
 
 ```text
 coffee-timer/
+├── .github/workflows/
+│   └── deploy.yml       # GitHub Actions CI/CD workflow for Firebase Hosting
 ├── public/              # Production Directory (Served by Firebase)
-│   ├── index.html       # Main SPA (Full React + CSS code)
+│   ├── index.html       # Main SPA (Full React + CSS + Procedural SVG code)
 │   └── favicon.png      # High-res Branding & App Icon
 ├── index.html           # Root Redirect (For GitHub Pages compatibility)
-├── firebase.json        # Redirects root to /public and defines headers
-├── .firebaserc          # Target Firebase project mapping
+├── firebase.json        # Redirects root to /public and defines cache headers
+├── .firebaserc          # Target Firebase project mapping (coffee-timer-66ed2)
 └── GEMINI.md            # AI Developer Guide (This file)
 ```
 

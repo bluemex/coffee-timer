@@ -3,10 +3,24 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>手沖職人指南 - 四六沖法 + 花朵繞法</title>
+    <meta name="description" content="專為手沖咖啡愛好者設計的數位計時輔助工具。結合粕谷哲 4:6 四六沖法與花朵繞法，提供動態 SVG 濾杯注水軌跡、分段倒數提示與互動式酸甜風味比例切換。">
+    <meta name="theme-color" content="#1c1917">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="手沖職人指南">
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="favicon.png">
+
+    <!-- Open Graph / Social Meta -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://coffee-timer.yooneko.com/">
+    <meta property="og:title" content="手沖職人指南 - 四六沖法 + 花朵繞法">
+    <meta property="og:description" content="結合 Tetsu Kasuya 4:6 沖煮法與花朵繞法，透過視覺化動態濾杯圖解與分段計時，精準引導每一階段的咖啡萃取。">
+    <meta property="og:image" content="https://coffee-timer.yooneko.com/favicon.png">
+
     <!-- 載入外部資源 -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -15,70 +29,161 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700;800&display=swap"
         rel="stylesheet">
     <style>
         :root {
-            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --shadow: 0 8px 30px rgba(28, 25, 23, 0.08);
+            --shadow-active: 0 16px 40px -8px rgba(217, 119, 6, 0.22), 0 4px 14px -2px rgba(28, 25, 23, 0.06);
             --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body {
-            font-family: 'Noto Sans TC', sans-serif;
+            font-family: 'Noto Sans TC', system-ui, -apple-system, sans-serif;
             line-height: 1.7;
+            background-color: #fafaf9;
+            background-image:
+                radial-gradient(circle at 15% 10%, rgba(251, 191, 36, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 90%, rgba(217, 119, 6, 0.06) 0%, transparent 45%);
+            background-attachment: fixed;
         }
 
         .yooneko-shadow {
             box-shadow: var(--shadow) !important;
         }
 
+        .yooneko-shadow-active {
+            box-shadow: var(--shadow-active) !important;
+        }
+
         .font-mono {
-            font-family: 'JetBrains+Mono', monospace;
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: tabular-nums;
         }
 
-        .animate-pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
+        /* 咖啡蒸氣上升動畫 */
+        @keyframes steamRise {
+            0% {
+                opacity: 0;
+                transform: translateY(4px) scaleX(0.9);
+            }
+            40% {
+                opacity: 0.65;
+            }
             100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: .5;
+                opacity: 0;
+                transform: translateY(-10px) scaleX(1.15);
             }
         }
 
-        .animate-bounce {
-            animation: bounce 1s infinite;
+        .steam-wisp-1 {
+            animation: steamRise 3.2s ease-in-out infinite;
         }
 
-        @keyframes bounce {
+        .steam-wisp-2 {
+            animation: steamRise 3.2s ease-in-out 1.1s infinite;
+        }
 
-            0%,
+        .steam-wisp-3 {
+            animation: steamRise 3.2s ease-in-out 2.2s infinite;
+        }
+
+        /* 水波漣漪擴散動畫 */
+        @keyframes rippleExpand {
+            0% {
+                transform: scale(0.25);
+                opacity: 0.75;
+            }
             100% {
-                transform: translateY(-5%);
-                animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+                transform: scale(1.55);
+                opacity: 0;
             }
+        }
 
-            50% {
-                transform: none;
-                animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+        .ripple-wave-1 {
+            transform-origin: 50px 50px;
+            animation: rippleExpand 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+        }
+
+        .ripple-wave-2 {
+            transform-origin: 50px 50px;
+            animation: rippleExpand 2.4s cubic-bezier(0.16, 1, 0.3, 1) 1.2s infinite;
+        }
+
+        /* 渦流旋轉動畫 */
+        @keyframes vortexSpin {
+            from {
+                transform: rotate(0deg);
             }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .vortex-spin {
+            transform-origin: 50px 50px;
+            animation: vortexSpin 2.6s linear infinite;
+        }
+
+        .vortex-spin-reverse {
+            transform-origin: 50px 50px;
+            animation: vortexSpin 4s linear infinite reverse;
+        }
+
+        /* 進度條波光流動動畫 */
+        @keyframes progressShimmer {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .progress-shimmer {
+            background: linear-gradient(90deg, #d97706 0%, #f59e0b 45%, #fde68a 50%, #f59e0b 55%, #d97706 100%);
+            background-size: 200% 100%;
+            animation: progressShimmer 2.5s linear infinite;
         }
 
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(-5px);
+                transform: translateY(-6px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
+            }
+        }
+
+        @keyframes floatSlow {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-3px);
+            }
+        }
+
+        .animate-float {
+            animation: floatSlow 3.5s ease-in-out infinite;
+        }
+
+        /* 尊重使用者動態減量偏好 (Accessibility) */
+        @media (prefers-reduced-motion: reduce) {
+            .steam-wisp-1,
+            .steam-wisp-2,
+            .steam-wisp-3,
+            .ripple-wave-1,
+            .ripple-wave-2,
+            .vortex-spin,
+            .vortex-spin-reverse,
+            .progress-shimmer,
+            .animate-float,
+            .animate-pulse,
+            .animate-bounce {
+                animation: none !important;
             }
         }
     </style>
@@ -88,17 +193,17 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
-        // 自定義 SVG 圖示組件，修正了相鄰元素未包裹的語法錯誤
+        // 自定義 SVG 圖示組件
         const Icon = ({ name, size = 24, className = "" }) => {
             const icons = {
                 coffee: <path d="M17 8h1a4 4 0 1 1 0 8h-1M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z M6 2v2 M10 2v2 M14 2v2" />,
-                play: <polygon points="5 3 19 12 5 21 5 3" />,
+                play: <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />,
                 pause: (
                     <React.Fragment>
-                        <rect x="6" y="4" width="4" height="16" />
-                        <rect x="14" y="4" width="4" height="16" />
+                        <rect x="6" y="4" width="4" height="16" fill="currentColor" />
+                        <rect x="14" y="4" width="4" height="16" fill="currentColor" />
                     </React.Fragment>
                 ),
                 "rotate-ccw": <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8 M3 3v5h5" />,
@@ -112,6 +217,34 @@
                     <React.Fragment>
                         <circle cx="12" cy="12" r="10" />
                         <path d="M12 8v8M8 12l4 4 4-4" />
+                    </React.Fragment>
+                ),
+                "volume-2": (
+                    <React.Fragment>
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                    </React.Fragment>
+                ),
+                "volume-x": (
+                    <React.Fragment>
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                        <line x1="23" y1="9" x2="17" y2="15" />
+                        <line x1="17" y1="9" x2="23" y2="15" />
+                    </React.Fragment>
+                ),
+                check: <polyline points="20 6 9 17 4 12" />,
+                droplet: <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />,
+                sparkles: (
+                    <React.Fragment>
+                        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                        <path d="M5 3v4M19 17v4M3 5h4M17 19h4" />
+                    </React.Fragment>
+                ),
+                sun: (
+                    <React.Fragment>
+                        <circle cx="12" cy="12" r="4" />
+                        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
                     </React.Fragment>
                 )
             };
@@ -133,84 +266,322 @@
             );
         };
 
-        const PouringDiagram = ({ type, isActive }) => {
-            const activeColor = "#d97706";
-            const inactiveColor = "#e7e5e4";
+        // 幾何路徑生成工具：花朵繞法路徑 (Polar Rose / Flower Path)
+        const generateFlowerPath = (cx, cy, R, petals, strength) => {
+            const points = [];
+            for (let i = 0; i <= 360; i += 2) {
+                const angle = (i * Math.PI) / 180;
+                const x = (cx + R * Math.cos(angle) + strength * Math.cos(petals * angle)).toFixed(2);
+                const y = (cy + R * Math.sin(angle) + strength * Math.sin(petals * angle)).toFixed(2);
+                points.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
+            }
+            return points.join(' ') + ' Z';
+        };
 
-            const generateFlowerPath = (cx, cy, R, petals, strength) => {
-                let points = [];
-                for (let i = 0; i <= 360; i += 1) {
-                    const angle = (i * Math.PI) / 180;
-                    const x = cx + R * Math.cos(angle) + strength * Math.cos(petals * angle);
-                    const y = cy + R * Math.sin(angle) + strength * Math.sin(petals * angle);
-                    points.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
-                }
-                return points.join(' ') + ' Z';
-            };
+        // 幾何路徑生成工具：阿基米德螺旋路徑 (由中心向外繞圈再回中心)
+        const generateSpiralPath = (cx, cy, maxR, turns = 1.75) => {
+            const points = [];
+            const steps = 120;
+            for (let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                const angle = t * turns * 2 * Math.PI - Math.PI / 2;
+                // 前 75% 由中心向外擴張至 maxR，後 25% 平滑收攏回中心水道
+                const radius = t <= 0.78
+                    ? (t / 0.78) * maxR
+                    : maxR * (1 - ((t - 0.78) / 0.22) * 0.85);
+                const x = (cx + radius * Math.cos(angle)).toFixed(2);
+                const y = (cy + radius * Math.sin(angle)).toFixed(2);
+                points.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
+            }
+            return points.join(' ');
+        };
+
+        // 俯視手沖濾杯動態圖解組件
+        const PouringDiagram = ({ type, isActive, isPreview, isDone }) => {
+            const animate = isActive || isPreview;
+            const activeColor = isActive ? "#d97706" : "#f59e0b";
+            const glowColor = isActive ? "#fbbf24" : "#fcd34d";
+            const inactiveColor = "#d6d3d1";
+
+            const flowerPathD = useMemo(() => generateFlowerPath(50, 50, 27, 8, 7.5), []);
+            const spiralPathD = useMemo(() => generateSpiralPath(50, 50, 31, 1.65), []);
+
+            // 濾杯 12 道肋骨導水線
+            const dripperRibs = useMemo(() => {
+                return Array.from({ length: 12 }, (_, idx) => {
+                    const deg = idx * 30;
+                    const rad = (deg * Math.PI) / 180;
+                    const x1 = (50 + 39 * Math.cos(rad)).toFixed(1);
+                    const y1 = (50 + 39 * Math.sin(rad)).toFixed(1);
+                    const x2 = (50 + 46 * Math.cos(rad)).toFixed(1);
+                    const y2 = (50 + 46 * Math.sin(rad)).toFixed(1);
+                    return { x1, y1, x2, y2 };
+                });
+            }, []);
 
             const renderPath = () => {
                 switch (type) {
                     case 'center-to-circle':
                         return (
                             <g>
-                                <circle cx="50" cy="50" r="4" fill={activeColor} className={isActive ? "animate-pulse" : "opacity-20"} />
-                                <circle cx="50" cy="50" r="32" fill="none" stroke={isActive ? activeColor : inactiveColor} strokeWidth="2.5" strokeDasharray="200" style={{ strokeDashoffset: isActive ? "0" : "200", transition: "stroke-dashoffset 3000ms ease-in-out, stroke 500ms" }} />
-                                <path d="M 50 10 V 46" stroke={isActive ? activeColor : inactiveColor} strokeWidth="1.5" strokeLinecap="round" className={isActive ? "animate-bounce" : "opacity-20"} />
-                                {isActive && (
-                                    <circle r="3" fill={activeColor}>
-                                        <animateMotion path="M 50 18 A 32 32 0 1 1 49.9 18" dur="3s" repeatCount="indefinite" />
-                                    </circle>
+                                {/* 同心擴散水波紋 */}
+                                {animate && (
+                                    <React.Fragment>
+                                        <circle cx="50" cy="50" r="22" fill="none" stroke={glowColor} strokeWidth="1" className="ripple-wave-1" />
+                                        <circle cx="50" cy="50" r="22" fill="none" stroke={activeColor} strokeWidth="1" className="ripple-wave-2" />
+                                    </React.Fragment>
+                                )}
+                                {/* 外圍基準圓 */}
+                                <circle
+                                    cx="50"
+                                    cy="50"
+                                    r="31"
+                                    fill="none"
+                                    stroke={animate ? activeColor : inactiveColor}
+                                    strokeWidth="1.2"
+                                    strokeDasharray="3 3"
+                                    opacity={animate ? "0.45" : "0.35"}
+                                />
+                                {/* 中心向外繞圈再回中心的螺旋注水軌跡 */}
+                                <path
+                                    d={spiralPathD}
+                                    fill="none"
+                                    stroke={animate ? activeColor : inactiveColor}
+                                    strokeWidth="2.4"
+                                    strokeLinecap="round"
+                                    strokeDasharray="260"
+                                    style={{
+                                        strokeDashoffset: animate ? "0" : "180",
+                                        transition: "stroke-dashoffset 1800ms cubic-bezier(0.4, 0, 0.2, 1), stroke 400ms",
+                                        opacity: animate ? 0.95 : 0.45
+                                    }}
+                                />
+                                {/* 中心水道定點 */}
+                                <circle cx="50" cy="50" r="3.5" fill={animate ? activeColor : inactiveColor} className={animate ? "animate-pulse" : "opacity-40"} />
+                                {/* 沿螺旋軌跡巡航的發光水珠 */}
+                                {animate && (
+                                    <g>
+                                        <circle r="4.5" fill={glowColor} opacity="0.45">
+                                            <animateMotion path={spiralPathD} dur="3.2s" repeatCount="indefinite" />
+                                        </circle>
+                                        <circle r="2.6" fill="#ffffff" stroke={activeColor} strokeWidth="1.5">
+                                            <animateMotion path={spiralPathD} dur="3.2s" repeatCount="indefinite" />
+                                        </circle>
+                                    </g>
                                 )}
                             </g>
                         );
+
                     case 'center-only':
                         return (
                             <g>
-                                <circle cx="50" cy="50" r="6" fill="none" stroke={isActive ? activeColor : inactiveColor} strokeWidth="3" strokeDasharray="40" style={{ strokeDashoffset: isActive ? "0" : "40", transition: "stroke-dashoffset 1000ms ease-out, stroke 500ms" }} />
-                                {isActive && <circle r="2" fill={activeColor}><animateMotion path="M 50 44 A 6 6 0 1 1 49.9 44" dur="1.2s" repeatCount="indefinite" /></circle>}
-                                <circle cx="50" cy="50" r="1.5" fill={activeColor} className={isActive ? "animate-pulse" : "opacity-20"} />
-                                <path d="M 50 15 V 45" stroke={activeColor} strokeWidth="1.5" strokeLinecap="round" className={isActive ? "animate-bounce" : "opacity-20"} />
+                                {/* 中心注水向外滲透的同心漣漪 */}
+                                {animate && (
+                                    <React.Fragment>
+                                        <circle cx="50" cy="50" r="18" fill="none" stroke={activeColor} strokeWidth="1.2" className="ripple-wave-1" />
+                                        <circle cx="50" cy="50" r="18" fill="none" stroke={glowColor} strokeWidth="1" className="ripple-wave-2" />
+                                    </React.Fragment>
+                                )}
+                                {/* 五元硬幣大小外圍參考環 */}
+                                <circle
+                                    cx="50"
+                                    cy="50"
+                                    r="15"
+                                    fill={animate ? "rgba(217, 119, 6, 0.08)" : "none"}
+                                    stroke={animate ? activeColor : inactiveColor}
+                                    strokeWidth="1.2"
+                                    strokeDasharray="2 3"
+                                    opacity={animate ? "0.6" : "0.3"}
+                                />
+                                {/* 核心五元硬幣注水路徑 */}
+                                <circle
+                                    cx="50"
+                                    cy="50"
+                                    r="8.5"
+                                    fill="none"
+                                    stroke={animate ? activeColor : inactiveColor}
+                                    strokeWidth="3"
+                                    strokeDasharray="60"
+                                    style={{
+                                        strokeDashoffset: animate ? "0" : "40",
+                                        transition: "stroke-dashoffset 1000ms ease-out, stroke 400ms"
+                                    }}
+                                />
+                                <circle cx="50" cy="50" r="2.5" fill={animate ? activeColor : inactiveColor} className={animate ? "animate-pulse" : "opacity-40"} />
+                                {animate && (
+                                    <g>
+                                        <circle r="4" fill={glowColor} opacity="0.4">
+                                            <animateMotion path="M 50 41.5 A 8.5 8.5 0 1 1 49.9 41.5" dur="1.3s" repeatCount="indefinite" />
+                                        </circle>
+                                        <circle r="2.4" fill="#ffffff" stroke={activeColor} strokeWidth="1.4">
+                                            <animateMotion path="M 50 41.5 A 8.5 8.5 0 1 1 49.9 41.5" dur="1.3s" repeatCount="indefinite" />
+                                        </circle>
+                                    </g>
+                                )}
                             </g>
                         );
+
                     case 'petal-to-center':
                         return (
                             <g>
-                                <path d={generateFlowerPath(50, 50, 28, 8, 8)} fill="none" stroke={isActive ? activeColor : inactiveColor} strokeWidth="2" strokeDasharray="600" style={{ strokeDashoffset: isActive ? "0" : "600", transition: "stroke-dashoffset 4000ms linear, stroke 500ms", opacity: isActive ? 1 : 0.1 }} />
-                                <circle cx="50" cy="50" r="6" fill="none" stroke={isActive ? activeColor : inactiveColor} strokeWidth="2" />
-                                {isActive && <circle r="2" fill={activeColor}><animateMotion path="M 50 44 A 6 6 0 1 1 49.9 44" dur="1.5s" repeatCount="indefinite" /></circle>}
-                                <circle cx="50" cy="50" r="1.5" fill={activeColor} className={isActive ? "animate-pulse" : "opacity-20"} />
+                                {/* 外圈八瓣花朵注水軌跡 */}
+                                <path
+                                    d={flowerPathD}
+                                    fill={animate ? "rgba(245, 158, 11, 0.06)" : "none"}
+                                    stroke={animate ? activeColor : inactiveColor}
+                                    strokeWidth="2"
+                                    strokeLinejoin="round"
+                                    strokeDasharray="600"
+                                    style={{
+                                        strokeDashoffset: animate ? "0" : "420",
+                                        transition: "stroke-dashoffset 2400ms ease-out, stroke 400ms",
+                                        opacity: animate ? 0.95 : 0.35
+                                    }}
+                                />
+                                {/* 內圈五元硬幣中心回歸環 */}
+                                <circle
+                                    cx="50"
+                                    cy="50"
+                                    r="7.5"
+                                    fill="none"
+                                    stroke={animate ? activeColor : inactiveColor}
+                                    strokeWidth="2.2"
+                                    opacity={animate ? "0.9" : "0.4"}
+                                />
+                                <circle cx="50" cy="50" r="2" fill={animate ? activeColor : inactiveColor} className={animate ? "animate-pulse" : "opacity-30"} />
+                                {/* 外圈花瓣巡航水珠 + 內圈五元硬幣水珠雙重動態 */}
+                                {animate && (
+                                    <g>
+                                        <circle r="4.2" fill={glowColor} opacity="0.45">
+                                            <animateMotion path={flowerPathD} dur="4.2s" repeatCount="indefinite" />
+                                        </circle>
+                                        <circle r="2.5" fill="#ffffff" stroke={activeColor} strokeWidth="1.4">
+                                            <animateMotion path={flowerPathD} dur="4.2s" repeatCount="indefinite" />
+                                        </circle>
+                                        <circle r="2" fill={activeColor}>
+                                            <animateMotion path="M 50 42.5 A 7.5 7.5 0 1 1 49.9 42.5" dur="1.4s" repeatCount="indefinite" />
+                                        </circle>
+                                    </g>
+                                )}
                             </g>
                         );
+
                     case 'turbulence':
                         return (
                             <g>
-                                <path d="M 50 10 V 46" stroke={isActive ? activeColor : inactiveColor} strokeWidth="5" strokeLinecap="round" className={isActive ? "animate-bounce" : "opacity-20"} />
-                                <g className={isActive ? "animate-[spin_2s_linear_infinite]" : ""} style={{ transformOrigin: 'center' }}>
-                                    <path d="M 30 30 Q 50 10 70 30 T 70 70 T 30 70 T 30 30" fill="none" stroke={activeColor} strokeWidth="3" strokeLinecap="round" className={isActive ? "" : "opacity-10"} />
-                                    <circle cx="50" cy="50" r="5" fill={activeColor} />
+                                {animate && (
+                                    <circle cx="50" cy="50" r="24" fill="none" stroke={glowColor} strokeWidth="1.4" className="ripple-wave-1" />
+                                )}
+                                {/* 外層反向對流虛線環 */}
+                                <g className={animate ? "vortex-spin-reverse" : ""}>
+                                    <circle
+                                        cx="50"
+                                        cy="50"
+                                        r="32"
+                                        fill="none"
+                                        stroke={animate ? activeColor : inactiveColor}
+                                        strokeWidth="1.5"
+                                        strokeDasharray="8 6 3 6"
+                                        opacity={animate ? "0.55" : "0.25"}
+                                    />
                                 </g>
+                                {/* 主動力對流旋渦 */}
+                                <g className={animate ? "vortex-spin" : ""}>
+                                    <path
+                                        d="M 50 18 C 70 18, 82 35, 76 54 C 70 72, 48 80, 32 68 C 18 57, 20 36, 36 28 C 48 22, 62 30, 62 44 C 62 55, 51 60, 44 54"
+                                        fill="none"
+                                        stroke={animate ? activeColor : inactiveColor}
+                                        strokeWidth="2.8"
+                                        strokeLinecap="round"
+                                        opacity={animate ? "0.95" : "0.35"}
+                                    />
+                                    <path
+                                        d="M 30 30 Q 50 12 70 30 T 70 70 T 30 70 T 30 30"
+                                        fill="none"
+                                        stroke={animate ? glowColor : inactiveColor}
+                                        strokeWidth="1.5"
+                                        strokeDasharray="6 6"
+                                        opacity={animate ? "0.7" : "0.2"}
+                                    />
+                                    {animate && (
+                                        <React.Fragment>
+                                            <circle cx="68" cy="34" r="2.5" fill="#ffffff" stroke={activeColor} strokeWidth="1.2" />
+                                            <circle cx="32" cy="64" r="2.2" fill={glowColor} />
+                                            <circle cx="38" cy="29" r="1.8" fill={activeColor} />
+                                        </React.Fragment>
+                                    )}
+                                </g>
+                                {/* 中心強勁水柱落點 */}
+                                <circle cx="50" cy="50" r="5" fill={animate ? activeColor : inactiveColor} className={animate ? "animate-pulse" : "opacity-35"} />
+                                {animate && <circle cx="50" cy="50" r="2" fill="#ffffff" />}
                             </g>
                         );
-                    default: return null;
+
+                    default:
+                        return null;
                 }
             };
 
             return (
-                <div className="w-16 h-16 md:w-20 md:h-20 bg-stone-100 rounded-full flex items-center justify-center shrink-0 border border-stone-200 shadow-inner overflow-hidden">
+                <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shrink-0 border transition-all duration-500 relative overflow-hidden ${
+                    isActive
+                        ? 'bg-gradient-to-br from-amber-50 via-stone-100 to-amber-100/70 border-amber-400 shadow-md ring-2 ring-amber-200/60'
+                        : isPreview
+                        ? 'bg-gradient-to-br from-stone-50 to-amber-50/60 border-amber-300/80 shadow-inner'
+                        : 'bg-stone-100 border-stone-200 shadow-inner'
+                }`}>
                     <svg viewBox="0 0 100 100" className="w-full h-full">
-                        <circle cx="50" cy="50" r="45" fill="none" stroke="#f5f5f4" strokeWidth="1" />
+                        {/* 濾杯外圈與肋骨刻線 */}
+                        <circle cx="50" cy="50" r="46" fill="none" stroke={animate ? "#fde68a" : "#e7e5e4"} strokeWidth="1" />
+                        {dripperRibs.map((rib, i) => (
+                            <line
+                                key={i}
+                                x1={rib.x1}
+                                y1={rib.y1}
+                                x2={rib.x2}
+                                y2={rib.y2}
+                                stroke={animate ? "#f59e0b" : "#d6d3d1"}
+                                strokeWidth="1"
+                                opacity={animate ? "0.35" : "0.4"}
+                                strokeLinecap="round"
+                            />
+                        ))}
+                        {/* 咖啡粉層範圍底圈 */}
+                        <circle
+                            cx="50"
+                            cy="50"
+                            r="38"
+                            fill={animate ? "rgba(217, 119, 6, 0.04)" : "rgba(231, 229, 228, 0.25)"}
+                            stroke={animate ? "#fcd34d" : "#e7e5e4"}
+                            strokeWidth="0.75"
+                        />
                         {renderPath()}
                     </svg>
+                    {/* 已完成階段的勾選徽章 */}
+                    {isDone && (
+                        <div className="absolute inset-0 bg-stone-900/10 backdrop-blur-[1px] flex items-center justify-center">
+                            <div className="w-7 h-7 rounded-full bg-stone-700/85 text-amber-400 flex items-center justify-center shadow">
+                                <Icon name="check" size={15} />
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         };
 
         function App() {
             const [target, setTarget] = useState('300');
+            const [flavorMode, setFlavorMode] = useState('standard'); // 'standard' | 'acidity' | 'sweetness'
             const [seconds, setSeconds] = useState(0);
             const [isActive, setIsActive] = useState(false);
+            const [previewIdx, setPreviewIdx] = useState(0);
+            const [soundEnabled, setSoundEnabled] = useState(true);
+            const [wakeLockActive, setWakeLockActive] = useState(false);
+
             const timerIntervalRef = useRef(null);
             const stageRefs = useRef([]);
+            const audioCtxRef = useRef(null);
+            const wakeLockRef = useRef(null);
 
             const brewData = {
                 '300': { powder: '20g', totalWater: 300, perStage: 60, range: { min: 45, max: 75 } },
@@ -219,23 +590,151 @@
 
             const current = brewData[target];
 
+            // 根據酸甜偏好計算五段注水量與累計水量 (前兩段合計固定為 40% = perStage * 2)
+            const stageWaterPlan = useMemo(() => {
+                const twoStagesTotal = current.perStage * 2;
+                let s1 = current.perStage;
+                if (flavorMode === 'acidity') s1 = current.range.max;
+                if (flavorMode === 'sweetness') s1 = current.range.min;
+                const s2 = twoStagesTotal - s1;
+                const s3 = current.perStage;
+                const s4 = current.perStage;
+                const s5 = current.perStage;
+                return {
+                     pours: [s1, s2, s3, s4, s5],
+                     cumulative: [
+                        s1,
+                        s1 + s2,
+                        s1 + s2 + s3,
+                        s1 + s2 + s3 + s4,
+                        current.totalWater
+                    ]
+                };
+            }, [current, flavorMode]);
+
+            // Web Audio API 溫潤職人提示音合成器 (無須外部音檔)
+            const playTone = useCallback((type) => {
+                if (!soundEnabled) return;
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioContext) return;
+                    if (!audioCtxRef.current) {
+                        audioCtxRef.current = new AudioContext();
+                    }
+                    const ctx = audioCtxRef.current;
+                    if (ctx.state === 'suspended') {
+                        ctx.resume();
+                    }
+
+                    const now = ctx.currentTime;
+                    const playNote = (freq, startTime, duration, peakGain = 0.12) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, startTime);
+                        gain.gain.setValueAtTime(0.0001, startTime);
+                        gain.gain.exponentialRampToValueAtTime(peakGain, startTime + 0.02);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(startTime);
+                        osc.stop(startTime + duration + 0.02);
+                    };
+
+                    if (type === 'start') {
+                        playNote(523.25, now, 0.25, 0.12);       // C5
+                        playNote(659.25, now + 0.12, 0.4, 0.14); // E5
+                    } else if (type === 'tick') {
+                        playNote(440, now, 0.09, 0.06);          // A4 輕柔預備拍
+                    } else if (type === 'stage') {
+                        playNote(587.33, now, 0.22, 0.13);       // D5
+                        playNote(880, now + 0.12, 0.45, 0.15);   // A5 換段頌缽音
+                    } else if (type === 'finish') {
+                        playNote(523.25, now, 0.25, 0.12);       // C5
+                        playNote(659.25, now + 0.12, 0.25, 0.12);// E5
+                        playNote(783.99, now + 0.24, 0.3, 0.13); // G5
+                        playNote(1046.5, now + 0.36, 0.65, 0.16);// C6 完成和弦
+                    }
+                } catch (e) {
+                    // 忽略瀏覽器未互動前的自動播放限制
+                }
+            }, [soundEnabled]);
+
+            // 螢幕恆亮控制 (Screen Wake Lock API)
+            useEffect(() => {
+                let isMounted = true;
+                const requestWakeLock = async () => {
+                    if ('wakeLock' in navigator && isActive && seconds <= 225) {
+                        try {
+                            wakeLockRef.current = await navigator.wakeLock.request('screen');
+                            if (isMounted) setWakeLockActive(true);
+                            wakeLockRef.current.addEventListener('release', () => {
+                                if (isMounted) setWakeLockActive(false);
+                            });
+                        } catch (err) {
+                            if (isMounted) setWakeLockActive(false);
+                        }
+                    } else if (wakeLockRef.current) {
+                        try {
+                            await wakeLockRef.current.release();
+                            wakeLockRef.current = null;
+                        } catch (err) {}
+                        if (isMounted) setWakeLockActive(false);
+                    }
+                };
+                requestWakeLock();
+                return () => {
+                    isMounted = false;
+                    if (wakeLockRef.current) {
+                        wakeLockRef.current.release().catch(() => {});
+                        wakeLockRef.current = null;
+                    }
+                };
+            }, [isActive, seconds <= 225]);
+
+            // 計時器主引擎
             useEffect(() => {
                 if (isActive) {
-                    timerIntervalRef.current = setInterval(() => setSeconds(s => s + 1), 1000);
+                    timerIntervalRef.current = setInterval(() => {
+                        setSeconds(s => s + 1);
+                    }, 1000);
                 } else {
                     clearInterval(timerIntervalRef.current);
                 }
                 return () => clearInterval(timerIntervalRef.current);
             }, [isActive]);
 
+            // 階段換段與倒數音效觸發
+            useEffect(() => {
+                if (!isActive || seconds === 0) return;
+                if (seconds === 225) {
+                    playTone('finish');
+                } else if (seconds < 225 && seconds % 45 === 0) {
+                    playTone('stage');
+                } else if (seconds < 225 && (seconds % 45 === 42 || seconds % 45 === 43 || seconds % 45 === 44)) {
+                    playTone('tick');
+                }
+            }, [seconds, isActive, playTone]);
+
+            const isFinished = isActive && seconds >= 225; // 45 * 5 = 225s (3:45)
+            const currentStageIdx = isFinished ? 4 : Math.min(Math.floor(seconds / 45), 4);
+            const stageElapsed = isFinished ? 45 : (seconds % 45);
+            const stageRemaining = isFinished ? 0 : (45 - stageElapsed);
+            const stageProgressPct = isFinished ? 100 : Math.min((stageElapsed / 45) * 100, 100);
+            const totalProgressPct = Math.min((seconds / 225) * 100, 100);
+            const isStageEndingSoon = isActive && !isFinished && stageRemaining <= 5;
+
             const toggleTimer = () => {
-                const isFinished = isActive && seconds > 225; // Check current finish state
                 if (isFinished) {
                     resetTimer();
                 } else {
+                    if (!isActive && seconds === 0) {
+                        playTone('start');
+                    }
                     setIsActive(!isActive);
                 }
             };
+
             const resetTimer = () => {
                 setIsActive(false);
                 setSeconds(0);
@@ -248,140 +747,549 @@
                 return `${m}:${s}`;
             };
 
-            const isFinished = isActive && seconds > 225; // 45 * 5 = 225s
-            const currentStageIdx = isFinished ? 4 : Math.min(Math.floor(seconds / 45), 4);
-
             useEffect(() => {
                 if (isActive && stageRefs.current[currentStageIdx]) {
                     const scrollTimer = setTimeout(() => {
-                        const offset = 160;
+                        const offset = 185;
                         const element = stageRefs.current[currentStageIdx];
                         const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
                         window.scrollTo({ top: elementPosition - offset, behavior: 'smooth' });
-                    }, 300);
+                    }, 280);
                     return () => clearTimeout(scrollTimer);
                 }
             }, [currentStageIdx, isActive]);
 
+            const flavorLabelMap = {
+                standard: '標準平衡',
+                acidity: '酸感偏好 (+25%)',
+                sweetness: '甜感偏好 (-25%)'
+            };
+
             const stages = [
-                { title: "第一等分：風味定調", time: "0:00 - 0:45", method: "從中間建立水道，濾紙開始滴水後向外繞濕一圈回中心", detail: `標準：${current.perStage}ml (±25%)`, effect: "多酸、少甜", diag: 'center-to-circle', cheer: "好的開始！讓咖啡粉盡情呼吸吧，這會為整杯咖啡打下美味的基礎。" },
-                { title: "第二等分：建立主體", time: "0:45 - 1:30", method: "持續從中間繞五元硬幣大小注水，時間內注滿 2/5 的水量", detail: `累計：${current.perStage * 2}ml`, effect: "萃取核心風味", diag: 'center-only', cheer: "很棒！現在正在萃取最迷人的香氣與甜感，保持穩定的節奏哦。" },
-                { title: "第三等分：延伸層次", time: "1:30 - 2:15", method: "開始從外圈花瓣式繞一圈後，再回歸中間繞五元硬幣注水", detail: `累計：${current.perStage * 3}ml`, effect: "增加風味寬度", diag: 'petal-to-center', cheer: "花朵繞法能讓邊緣的粉層也參與萃取，風味層次會更豐富呢！" },
-                { title: "第四等分：深度萃取", time: "2:15 - 3:00", method: "再次從外圈花瓣式繞一圈後，再回歸中間繞五元硬幣注水", detail: `累計：${current.perStage * 4}ml`, effect: "提取厚實口感", diag: 'petal-to-center', cheer: "就快完成囉！這一段注水會把咖啡醇厚的口感完美釋放出來。" },
-                { title: "第五等分：動力對流", time: "3:00 - 3:45", method: "大水從中間注水帶起粉對流，然後四處繞圈", detail: `累計：${current.totalWater}ml`, effect: "均勻收尾，平衡濃度", diag: 'turbulence', cheer: "最後的衝刺！大水流帶起對流，讓整杯咖啡的濃度達到完美平衡。" }
+                {
+                    title: "第一等分：風味定調",
+                    time: "0:00 - 0:45",
+                    method: "從中間建立水道，濾紙開始滴水後向外繞濕一圈回中心",
+                    detail: flavorMode === 'standard'
+                        ? `標準：${stageWaterPlan.pours[0]}ml (±25%)`
+                        : `${flavorLabelMap[flavorMode]}：${stageWaterPlan.pours[0]}ml`,
+                    pourAmount: stageWaterPlan.pours[0],
+                    cumulativeWater: stageWaterPlan.cumulative[0],
+                    effect: flavorMode === 'acidity' ? "強化明亮果酸" : flavorMode === 'sweetness' ? "鋪墊飽滿甜感" : "多酸、少甜定調",
+                    phaseTag: "40% 風味段",
+                    diag: 'center-to-circle',
+                    cheer: "好的開始！讓咖啡粉盡情呼吸吧，這會為整杯咖啡打下美味的基礎。"
+                },
+                {
+                    title: "第二等分：建立主體",
+                    time: "0:45 - 1:30",
+                    method: "持續從中間繞五元硬幣大小注水，時間內注滿 2/5 的水量",
+                    detail: `本段 +${stageWaterPlan.pours[1]}ml · 累計：${stageWaterPlan.cumulative[1]}ml`,
+                    pourAmount: stageWaterPlan.pours[1],
+                    cumulativeWater: stageWaterPlan.cumulative[1],
+                    effect: "萃取核心甜感與香氣",
+                    phaseTag: "40% 風味段",
+                    diag: 'center-only',
+                    cheer: "很棒！現在正在萃取最迷人的香氣與甜感，保持穩定的節奏哦。"
+                },
+                {
+                    title: "第三等分：延伸層次",
+                    time: "1:30 - 2:15",
+                    method: "開始從外圈花瓣式繞一圈後，再回歸中間繞五元硬幣注水",
+                    detail: `本段 +${stageWaterPlan.pours[2]}ml · 累計：${stageWaterPlan.cumulative[2]}ml`,
+                    pourAmount: stageWaterPlan.pours[2],
+                    cumulativeWater: stageWaterPlan.cumulative[2],
+                    effect: "增加風味寬度",
+                    phaseTag: "60% 濃度段",
+                    diag: 'petal-to-center',
+                    cheer: "花朵繞法能讓邊緣的粉層也參與萃取，風味層次會更豐富呢！"
+                },
+                {
+                    title: "第四等分：深度萃取",
+                    time: "2:15 - 3:00",
+                    method: "再次從外圈花瓣式繞一圈後，再回歸中間繞五元硬幣注水",
+                    detail: `本段 +${stageWaterPlan.pours[3]}ml · 累計：${stageWaterPlan.cumulative[3]}ml`,
+                    pourAmount: stageWaterPlan.pours[3],
+                    cumulativeWater: stageWaterPlan.cumulative[3],
+                    effect: "提取厚實口感",
+                    phaseTag: "60% 濃度段",
+                    diag: 'petal-to-center',
+                    cheer: "就快完成囉！這一段注水會把咖啡醇厚的口感完美釋放出來。"
+                },
+                {
+                    title: "第五等分：動力對流",
+                    time: "3:00 - 3:45",
+                    method: "大水從中間注水帶起粉對流，然後四處繞圈",
+                    detail: `本段 +${stageWaterPlan.pours[4]}ml · 累計：${stageWaterPlan.cumulative[4]}ml`,
+                    pourAmount: stageWaterPlan.pours[4],
+                    cumulativeWater: stageWaterPlan.cumulative[4],
+                    effect: "均勻收尾，平衡濃度",
+                    phaseTag: "60% 濃度段",
+                    diag: 'turbulence',
+                    cheer: "最後的衝刺！大水流帶起對流，讓整杯咖啡的濃度達到完美平衡。"
+                }
             ];
 
-            return (
-                <div className="min-h-screen bg-stone-50 font-sans text-stone-800 antialiased">
-                    <div className="max-w-2xl mx-auto bg-white yooneko-shadow min-h-screen border-x border-stone-200 relative">
+            // 沖煮中即時顯現當前階段的職人語錄
+            const activeCheer = stages[currentStageIdx]?.cheer;
 
+            return (
+                <div className="min-h-screen font-sans text-stone-800 antialiased">
+                    <div className="max-w-2xl mx-auto bg-white yooneko-shadow min-h-screen border-x border-stone-200/80 relative">
+
+                        {/* 頂部計時與控制面板 (支援 Sticky Glassmorphism) */}
                         <div className={`transition-all duration-500 ease-in-out ${isActive ? 'sticky top-0 z-50 p-2 md:p-4' : 'relative p-0'}`}>
-                            <div className={`bg-stone-800 text-stone-50 yooneko-shadow transition-all duration-500 overflow-hidden ${isActive ? 'rounded-2xl p-4 md:px-8 bg-stone-800/95 backdrop-blur-md border border-stone-700' : 'p-6 md:p-10 rounded-none'
+                            <div className={`bg-stone-800 text-stone-50 yooneko-shadow transition-all duration-500 overflow-hidden relative ${
+                                isActive
+                                    ? 'rounded-2xl p-4 md:px-7 bg-stone-900/95 backdrop-blur-md border border-stone-700/80'
+                                    : 'p-6 md:p-10 rounded-none bg-gradient-to-br from-stone-800 via-stone-800 to-stone-900'
+                            }`}>
+                                {/* 背景裝飾柔光 */}
+                                <div className="pointer-events-none absolute -top-24 -right-24 w-64 h-64 rounded-full bg-amber-500/10 blur-3xl" />
+
+                                {/* 展開式 Hero 標頭區 (未開始計時時顯示) */}
+                                <div className={`flex justify-between items-start transition-all duration-500 ${
+                                    isActive ? 'h-0 opacity-0 mb-0 scale-95 pointer-events-none overflow-hidden' : 'h-auto opacity-100 mb-7'
                                 }`}>
-                                <div className={`flex justify-between items-start transition-all duration-500 ${isActive ? 'h-0 opacity-0 mb-0 scale-95 pointer-events-none' : 'h-auto opacity-100 mb-8'}`}>
                                     <div className="flex-1 pr-4">
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[11px] font-bold tracking-wider uppercase mb-2.5">
+                                            <Icon name="sparkles" size={12} />
+                                            <span>Tetsu Kasuya 4:6 · Flower Pour</span>
+                                        </div>
                                         <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white flex items-center gap-3">
                                             手沖職人指南
                                         </h1>
-                                        <p className="text-stone-400 text-sm mt-1 italic font-light">四六沖法 + 花朵繞法</p>
-                                        <div className="mt-4 space-y-3 border-l-2 border-amber-600/50 pl-3">
+                                        <p className="text-stone-400 text-sm mt-1 italic font-light">四六沖法 + 花朵繞法 · 視覺化萃取引導</p>
+
+                                        <div className="mt-5 space-y-3.5 border-l-2 border-amber-600/60 pl-3.5">
                                             <p className="text-xs sm:text-sm leading-relaxed text-stone-300">
-                                                將注水分成五段，每段週期固定為 <span className="text-amber-500 font-bold">45 秒</span> 流乾。
+                                                將注水分成五段，每段週期固定為 <span className="text-amber-400 font-bold">45 秒</span> 流乾（總時間 <span className="font-mono text-amber-400 font-bold">3:45</span>）。
                                             </p>
-                                            <div className="flex flex-col gap-1.5 text-xs sm:text-sm text-stone-400 pt-1">
-                                                <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" /><strong className="text-stone-200">前兩段 (40%) 決定風味：</strong> 控酸甜平衡</span>
-                                                <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" /><strong className="text-stone-200">後三段 (60%) 決定濃度：</strong> 定口感厚度</span>
+
+                                            {/* 4:6 黃金比例視覺化進度條 */}
+                                            <div className="space-y-1.5 pt-0.5">
+                                                <div className="flex h-2.5 w-full rounded-full overflow-hidden bg-stone-950/60 p-0.5 gap-1 border border-stone-700/60">
+                                                    <div className="w-[40%] bg-gradient-to-r from-amber-400 to-amber-500 rounded-l-full" title="前兩段 40%：決定風味酸甜" />
+                                                    <div className="w-[60%] bg-gradient-to-r from-amber-600 to-amber-800 rounded-r-full" title="後三段 60%：決定濃度厚實" />
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-stone-400 pt-0.5">
+                                                    <span className="flex items-center gap-1.5">
+                                                        <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                                                        <strong className="text-stone-200">前兩段 (40%) 決定風味：</strong>控酸甜平衡
+                                                    </span>
+                                                    <span className="flex items-center gap-1.5">
+                                                        <span className="w-2 h-2 rounded-full bg-amber-700 shrink-0" />
+                                                        <strong className="text-stone-200">後三段 (60%) 決定濃度：</strong>定口感厚度
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div className="bg-stone-900/40 p-3 rounded-2xl border border-stone-700/50">
-                                                <p className="text-xs sm:text-sm text-amber-500/90 font-bold flex items-center gap-1.5 mb-1"><Icon name="arrow-down-circle" size={14} /> 研磨調整建議</p>
-                                                <p className="text-xs sm:text-sm font-medium text-stone-300 tracking-wide">若積水可調粗，流太快可調細一點哦。</p>
+
+                                            <div className="bg-stone-900/55 p-3 rounded-2xl border border-stone-700/60">
+                                                <p className="text-xs sm:text-sm text-amber-400 font-bold flex items-center gap-1.5 mb-0.5">
+                                                    <Icon name="arrow-down-circle" size={14} /> 研磨調整建議
+                                                </p>
+                                                <p className="text-xs sm:text-sm font-medium text-stone-300 tracking-wide">
+                                                    建議使用中粗研磨；若積水可調粗，流太快可調細一點哦。
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
-                                    <img src="favicon.png" alt="Logo" className="w-12 h-12 md:w-14 md:h-14 rounded-2xl shadow-lg" />
+
+                                    {/* 品牌 Logo 搭配裊裊咖啡蒸氣動畫 */}
+                                    <div className="relative flex flex-col items-center shrink-0 pt-3">
+                                        <svg width="44" height="20" viewBox="0 0 44 20" fill="none" className="-mb-1 pointer-events-none">
+                                            <path d="M14 18 C12 13, 17 8, 14 2" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round" className="steam-wisp-1" />
+                                            <path d="M22 19 C20 13, 25 7, 22 1" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round" className="steam-wisp-2" />
+                                            <path d="M30 18 C28 13, 33 8, 30 2" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round" className="steam-wisp-3" />
+                                        </svg>
+                                        <div className="relative animate-float">
+                                            <div className="absolute -inset-1 rounded-2xl bg-amber-500/20 blur-md" />
+                                            <img src="favicon.png" alt="Logo" className="relative w-12 h-12 md:w-14 md:h-14 rounded-2xl shadow-lg border border-stone-600/50" />
+                                        </div>
+                                    </div>
                                 </div>
 
+                                {/* 粉水比參數快速切換器 */}
                                 {!isActive && (
-                                    <div className="flex bg-stone-900/50 p-1.5 rounded-2xl border border-stone-700 mb-8">
-                                        {Object.keys(brewData).map(key => (
-                                            <button key={key} onClick={() => { setTarget(key); setSeconds(0); }} className={`flex-1 py-2.5 sm:py-2 rounded-2xl text-xs sm:text-[10px] font-black transition-all ${target === key ? 'bg-amber-600 text-white shadow-lg' : 'text-stone-500 hover:text-stone-300'}`}>
-                                                {brewData[key].powder} / {brewData[key].totalWater}ml
-                                            </button>
-                                        ))}
+                                    <div className="flex bg-stone-900/60 p-1.5 rounded-2xl border border-stone-700/80 mb-7 gap-1.5">
+                                        {Object.keys(brewData).map(key => {
+                                            const active = target === key;
+                                            return (
+                                                <button
+                                                    key={key}
+                                                    onClick={() => { setTarget(key); setSeconds(0); }}
+                                                    className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${
+                                                        active
+                                                            ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-lg scale-[1.01]'
+                                                            : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/60'
+                                                    }`}
+                                                >
+                                                    <Icon name="coffee" size={14} />
+                                                    <span>{brewData[key].powder} 咖啡粉 / {brewData[key].totalWater}ml 水量</span>
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 )}
 
-                                <div className={`flex items-center justify-between transition-all duration-500 ${isActive ? 'gap-4' : 'flex-row gap-2 sm:gap-6'}`}>
-                                    <div className={`flex items-center transition-all duration-500 ${isActive ? 'gap-4' : 'flex-1 flex-col items-start gap-0.5'}`}>
-                                        {isActive && <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse hidden sm:block" />}
+                                {/* 核心計時顯示與操作按鈕列 */}
+                                <div className={`flex items-center justify-between transition-all duration-500 ${isActive ? 'gap-3' : 'flex-row gap-2 sm:gap-6'}`}>
+                                    <div className={`flex items-center transition-all duration-500 ${isActive ? 'gap-3' : 'flex-1 flex-col items-start gap-0.5'}`}>
+                                        {isActive && (
+                                            <div className={`w-2.5 h-2.5 rounded-full hidden sm:block ${isStageEndingSoon ? 'bg-red-400 animate-ping' : 'bg-amber-400 animate-pulse'}`} />
+                                        )}
                                         <div className="flex flex-col">
-                                            {!isActive && <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-stone-500 font-bold mb-1">Brewing Timer</span>}
-                                            <div className="flex items-baseline gap-1.5 sm:gap-2">
-                                                <span className={`font-mono font-bold leading-none transition-all duration-500 ${isActive ? 'text-2xl md:text-3xl text-amber-400' : 'text-3xl xs:text-4xl sm:text-5xl text-stone-200'}`}>
+                                            {!isActive && (
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-[10px] uppercase tracking-widest text-stone-400 font-bold">Brewing Timer</span>
+                                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-stone-700/70 text-amber-400/90 font-semibold">
+                                                        {flavorLabelMap[flavorMode]}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <div className="flex items-baseline gap-2 flex-wrap">
+                                                <span className={`font-mono font-extrabold leading-none transition-all duration-500 ${
+                                                    isActive ? 'text-2xl sm:text-3xl text-amber-400' : 'text-4xl sm:text-5xl text-stone-100'
+                                                }`}>
                                                     {formatTime(seconds)}
                                                 </span>
-                                                {isActive && !isFinished && <span className="text-[9px] sm:text-[10px] font-mono text-stone-500 uppercase">Stage {currentStageIdx + 1}</span>}
-                                                {isFinished && <span className="text-[9px] sm:text-[10px] font-bold text-amber-500 uppercase animate-pulse">Done</span>}
+
+                                                {isActive && !isFinished && (
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
+                                                            Stage {currentStageIdx + 1}/5
+                                                        </span>
+                                                        <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-md border ${
+                                                            isStageEndingSoon
+                                                                ? 'bg-red-500/20 text-red-300 border-red-500/40 animate-pulse'
+                                                                : 'bg-stone-800 text-stone-300 border-stone-700'
+                                                        }`}>
+                                                            本段倒數 {stageRemaining}s
+                                                        </span>
+                                                        <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-stone-800/90 text-amber-400 border border-stone-700">
+                                                            <Icon name="droplet" size={11} />
+                                                            目標秤重 {stages[currentStageIdx].cumulativeWater}ml
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                {isFinished && (
+                                                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase animate-pulse">
+                                                        Brew Complete
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
 
+                                    {/* 音效切換、重置、開始/暫停控制鍵 */}
                                     <div className="flex gap-1.5 sm:gap-2 items-center shrink-0">
-                                        <button onClick={resetTimer} className={`rounded-full flex items-center justify-center transition-all ${isActive ? 'p-2 bg-stone-700 text-stone-400 hover:text-white' : 'p-2.5 sm:p-3 bg-stone-700 text-stone-300 hover:bg-stone-600'}`}>
-                                            <Icon name="rotate-ccw" size={isActive ? 16 : 18} />
+                                        <button
+                                            onClick={() => setSoundEnabled(!soundEnabled)}
+                                            title={soundEnabled ? "關閉階段提示音" : "開啟階段提示音"}
+                                            aria-label={soundEnabled ? "關閉階段提示音" : "開啟階段提示音"}
+                                            className={`rounded-full flex items-center justify-center transition-all border ${
+                                                soundEnabled
+                                                    ? 'bg-stone-700/80 border-amber-500/40 text-amber-400 hover:bg-stone-700'
+                                                    : 'bg-stone-800/80 border-stone-700 text-stone-500 hover:text-stone-300'
+                                            } ${isActive ? 'p-2' : 'p-2.5 sm:p-3'}`}
+                                        >
+                                            <Icon name={soundEnabled ? "volume-2" : "volume-x"} size={isActive ? 15 : 17} />
                                         </button>
-                                        <button onClick={toggleTimer} className={`rounded-full shadow-lg transition-all active:scale-95 flex items-center gap-1.5 sm:gap-2 font-black ${isActive ? (isFinished ? 'bg-amber-500 px-4 sm:px-6 py-2 text-[10px] sm:text-xs text-stone-900 animate-pulse' : 'bg-red-500 px-4 sm:px-6 py-2 text-[10px] sm:text-xs text-white') : 'bg-amber-600 px-4 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-sm text-white hover:bg-amber-500'}`}>
-                                            <Icon name={isActive ? "pause" : "play"} size={isActive ? 14 : 18} />
-                                            <span>{isActive ? (isFinished ? '完成沖煮' : '暫停') : '開始沖煮'}</span>
+
+                                        <button
+                                            onClick={resetTimer}
+                                            title="重置計時器"
+                                            aria-label="重置計時器"
+                                            className={`rounded-full flex items-center justify-center transition-all border border-stone-700 ${
+                                                isActive
+                                                    ? 'p-2 bg-stone-800 text-stone-400 hover:text-white hover:bg-stone-700'
+                                                    : 'p-2.5 sm:p-3 bg-stone-700/80 text-stone-300 hover:bg-stone-600 hover:text-white'
+                                            }`}
+                                        >
+                                            <Icon name="rotate-ccw" size={isActive ? 15 : 17} />
+                                        </button>
+
+                                        <button
+                                            onClick={toggleTimer}
+                                            className={`rounded-full shadow-lg transition-all active:scale-95 flex items-center gap-1.5 sm:gap-2 font-black ${
+                                                isActive
+                                                    ? isFinished
+                                                        ? 'bg-amber-500 px-4 sm:px-6 py-2 text-xs text-stone-900 animate-pulse'
+                                                        : 'bg-red-500 hover:bg-red-600 px-4 sm:px-6 py-2 text-xs text-white'
+                                                    : 'bg-gradient-to-r from-amber-600 to-amber-500 px-5 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-sm text-white hover:from-amber-500 hover:to-amber-400 shadow-amber-900/30'
+                                            }`}
+                                        >
+                                            <Icon name={isActive ? (isFinished ? "rotate-ccw" : "pause") : "play"} size={isActive ? 14 : 17} />
+                                            <span>{isActive ? (isFinished ? '完成沖煮' : '暫停') : (seconds > 0 ? '繼續沖煮' : '開始沖煮')}</span>
                                         </button>
                                     </div>
                                 </div>
-                                {isActive && !isFinished && currentStageIdx > 0 && stages[currentStageIdx - 1].cheer && (
-                                    <div className="mt-4 bg-amber-500/10 border border-amber-500/20 px-4 py-2.5 rounded-2xl animate-[fadeIn_0.5s_ease-out]">
-                                        <p className="text-amber-400/90 text-[11px] sm:text-xs font-medium italic flex items-center justify-center gap-2">
-                                            <span className="text-amber-500 text-[10px]">✧</span>
-                                            {stages[currentStageIdx - 1].cheer}
-                                            <span className="text-amber-500 text-[10px]">✧</span>
-                                        </p>
+
+                                {/* 沖煮進行中的五階段進度膠囊與即時資訊列 */}
+                                {isActive && (
+                                    <div className="mt-3.5 space-y-2">
+                                        {/* 5 段式進度軌 */}
+                                        <div className="grid grid-cols-5 gap-1.5">
+                                            {stages.map((st, idx) => {
+                                                let fillPct = 0;
+                                                if (isFinished || idx < currentStageIdx) fillPct = 100;
+                                                else if (idx === currentStageIdx) fillPct = stageProgressPct;
+                                                return (
+                                                    <div key={idx} className="h-1.5 rounded-full bg-stone-700/80 overflow-hidden">
+                                                        <div
+                                                            className={`h-full rounded-full transition-all duration-500 ${
+                                                                idx === currentStageIdx && !isFinished ? 'progress-shimmer' : 'bg-amber-500'
+                                                            }`}
+                                                            style={{ width: `${fillPct}%` }}
+                                                        />
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* 手機版即時目標秤重 + 恆亮狀態提示 */}
+                                        {!isFinished && (
+                                            <div className="flex items-center justify-between text-[11px] text-stone-300 px-0.5">
+                                                <span className="flex items-center gap-1.5 font-mono font-bold text-amber-300">
+                                                    <Icon name="droplet" size={12} />
+                                                    本段 +{stages[currentStageIdx].pourAmount}ml → 秤重目標 {stages[currentStageIdx].cumulativeWater}ml
+                                                </span>
+                                                <span className="text-[10px] text-stone-400 flex items-center gap-1">
+                                                    {wakeLockActive && <Icon name="sun" size={11} className="text-amber-400" />}
+                                                    總進度 {Math.round(totalProgressPct)}%
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
+
+                                {/* 階段倒數 5 秒換段預告 或 職人暖心語錄 */}
+                                {isActive && !isFinished && (
+                                    <div className={`mt-3 px-3.5 py-2 rounded-xl border transition-all duration-300 animate-[fadeIn_0.4s_ease-out] ${
+                                        isStageEndingSoon && currentStageIdx < 4
+                                            ? 'bg-red-500/15 border-red-400/40 text-red-200'
+                                            : 'bg-amber-500/10 border-amber-500/20 text-amber-300/95'
+                                    }`}>
+                                        {isStageEndingSoon && currentStageIdx < 4 ? (
+                                            <p className="text-[11px] sm:text-xs font-bold flex items-center justify-center gap-2">
+                                                <span className="inline-block w-2 h-2 rounded-full bg-red-400 animate-ping" />
+                                                準備進入第 {currentStageIdx + 2} 等分（下一段目標累計：{stages[currentStageIdx + 1].cumulativeWater}ml）
+                                            </p>
+                                        ) : (
+                                            <p className="text-[11px] sm:text-xs font-medium italic flex items-center justify-center gap-2 text-center">
+                                                <span className="text-amber-500 text-[10px]">✧</span>
+                                                <span>{activeCheer}</span>
+                                                <span className="text-amber-500 text-[10px]">✧</span>
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* 萃取完成慶祝橫幅 */}
                                 {isFinished && (
-                                    <div className="mt-4 bg-amber-500/10 border border-amber-500/20 p-3 rounded-2xl text-center animate-pulse">
-                                        <p className="text-amber-400 text-xs sm:text-sm font-bold">🎉 萃取完成！請將濾杯移開，並按下完成沖煮。</p>
+                                    <div className="mt-4 bg-gradient-to-r from-amber-500/20 via-amber-400/15 to-amber-500/20 border border-amber-400/40 p-3.5 rounded-2xl text-center animate-[fadeIn_0.5s_ease-out]">
+                                        <p className="text-amber-300 text-xs sm:text-sm font-bold">
+                                            🎉 3:45 黃金萃取完成！請將濾杯移開並搖勻咖啡液，享受手沖的美好風味。
+                                        </p>
+                                        <p className="text-stone-300 text-[11px] mt-1 font-mono">
+                                            本次參數：{current.powder} 咖啡粉 · {current.totalWater}ml 水量 · {flavorLabelMap[flavorMode]}
+                                        </p>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="p-6 space-y-6">
+                        {/* 待機狀態提示：可點擊任一卡片預覽濾杯注水軌跡 */}
+                        {!isActive && (
+                            <div className="px-6 pt-5 pb-1 flex items-center justify-between text-xs text-stone-400">
+                                <span className="flex items-center gap-1.5 font-medium">
+                                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                                    點擊任一階段卡片可預覽動態注水軌跡
+                                </span>
+                                <span className="font-mono text-[11px] text-stone-400">5 Stages · 45s each</span>
+                            </div>
+                        )}
+
+                        {/* 五階段手沖引導卡片列表 */}
+                        <div className="p-6 space-y-5">
                             {stages.map((stage, idx) => {
-                                const isCurrent = isActive && currentStageIdx === idx;
-                                const isDone = isActive && currentStageIdx > idx;
+                                const isCurrent = isActive && !isFinished && currentStageIdx === idx;
+                                const isDone = isActive && (isFinished || currentStageIdx > idx);
+                                const isPreview = !isActive && previewIdx === idx;
+
                                 return (
-                                    <div key={idx} ref={el => stageRefs.current[idx] = el} className={`relative p-6 rounded-2xl border transition-all duration-700 overflow-hidden scroll-mt-40 ${isCurrent ? 'bg-amber-50 border-amber-400 ring-4 ring-amber-100 yooneko-shadow scale-[1.02] z-10' : isDone ? 'bg-stone-50 border-stone-100 opacity-30 grayscale' : 'bg-white border-stone-100 yooneko-shadow'}`}>
-                                        <div className="flex gap-5 items-center">
-                                            <PouringDiagram type={stage.diag} isActive={isCurrent} />
+                                    <div
+                                        key={idx}
+                                        ref={el => stageRefs.current[idx] = el}
+                                        onClick={() => { if (!isActive) setPreviewIdx(idx); }}
+                                        className={`relative p-5 sm:p-6 rounded-2xl border transition-all duration-500 overflow-hidden scroll-mt-44 ${
+                                            !isActive ? 'cursor-pointer' : ''
+                                        } ${
+                                            isCurrent
+                                                ? 'bg-gradient-to-br from-amber-50/95 via-white to-amber-50/60 border-amber-400 ring-4 ring-amber-100/90 yooneko-shadow-active scale-[1.015] z-10'
+                                                : isDone
+                                                ? 'bg-stone-50/80 border-stone-200/70 opacity-50'
+                                                : isPreview
+                                                ? 'bg-white border-amber-300 ring-2 ring-amber-100/70 yooneko-shadow'
+                                                : 'bg-white border-stone-100 hover:border-stone-200 yooneko-shadow'
+                                        }`}
+                                    >
+                                        {/* 進行中階段的底部即時進度光條 */}
+                                        {isCurrent && (
+                                            <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-amber-100 overflow-hidden">
+                                                <div
+                                                    className="h-full progress-shimmer transition-all duration-500"
+                                                    style={{ width: `${stageProgressPct}%` }}
+                                                />
+                                            </div>
+                                        )}
+
+                                        <div className="flex gap-4 sm:gap-5 items-center">
+                                            <PouringDiagram
+                                                type={stage.diag}
+                                                isActive={isCurrent}
+                                                isPreview={isPreview}
+                                                isDone={isDone}
+                                            />
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex justify-between items-center mb-1.5">
-                                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider ${isCurrent ? 'bg-amber-600 text-white' : 'bg-stone-100 text-stone-500'}`}>Stage {idx + 1}</span>
-                                                    <span className={`font-mono text-[10px] font-bold ${isCurrent ? 'text-amber-600' : 'text-stone-400'}`}>{stage.time}</span>
+                                                <div className="flex justify-between items-center mb-1.5 gap-2 flex-wrap">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                                                            isCurrent
+                                                                ? 'bg-amber-600 text-white shadow-sm'
+                                                                : isDone
+                                                                ? 'bg-stone-200 text-stone-600'
+                                                                : isPreview
+                                                                ? 'bg-amber-500/15 text-amber-700 border border-amber-300/60'
+                                                                : 'bg-stone-100 text-stone-500'
+                                                        }`}>
+                                                            Stage {idx + 1}
+                                                        </span>
+                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                                                            idx < 2
+                                                                ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
+                                                                : 'bg-stone-100 text-stone-600 border border-stone-200/60'
+                                                        }`}>
+                                                            {stage.phaseTag}
+                                                        </span>
+                                                        {isCurrent && (
+                                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-800 animate-pulse">
+                                                                {stageElapsed < 15 ? '💧 注水繞圈中' : '⏳ 等待滴濾流乾'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <span className={`font-mono text-xs font-bold ${
+                                                        isCurrent ? 'text-amber-700' : 'text-stone-400'
+                                                    }`}>
+                                                        {stage.time}
+                                                    </span>
                                                 </div>
-                                                <h3 className={`font-bold text-lg sm:text-base mb-2 sm:truncate ${isCurrent ? 'text-amber-900' : 'text-stone-900'}`}>{stage.title}</h3>
-                                                <div className={`pl-3.5 border-l-[3px] py-0.5 ${isCurrent ? 'border-amber-400' : 'border-stone-200'}`}>
-                                                    <p className={`text-[13px] sm:text-xs leading-[1.7] tracking-[0.02em] font-medium ${isCurrent ? 'text-amber-800' : 'text-stone-500'}`}>
+
+                                                <h3 className={`font-bold text-base sm:text-lg mb-2 ${
+                                                    isCurrent ? 'text-amber-950' : 'text-stone-900'
+                                                }`}>
+                                                    {stage.title}
+                                                </h3>
+
+                                                <div className={`pl-3.5 border-l-[3px] py-0.5 ${
+                                                    isCurrent ? 'border-amber-500' : isPreview ? 'border-amber-300' : 'border-stone-200'
+                                                }`}>
+                                                    <p className={`text-[13px] sm:text-xs leading-[1.7] tracking-[0.02em] font-medium ${
+                                                        isCurrent ? 'text-amber-900' : 'text-stone-600'
+                                                    }`}>
                                                         {stage.method}
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="mt-4 flex justify-between items-center">
-                                            <div className={`text-xs sm:text-[11px] font-bold px-3 py-1.5 sm:py-1 rounded-full ${isCurrent ? 'bg-amber-200 text-amber-900' : 'bg-stone-100 text-stone-500'}`}>{stage.detail}</div>
-                                            <div className="text-stone-400 text-xs sm:text-[10px] italic font-medium">{stage.effect}</div>
+
+                                        <div className="mt-4 flex justify-between items-center gap-2 flex-wrap">
+                                            <div className={`text-xs sm:text-[11px] font-mono font-bold px-3 py-1 rounded-full flex items-center gap-1.5 ${
+                                                isCurrent
+                                                    ? 'bg-amber-200/90 text-amber-950 shadow-sm'
+                                                    : isPreview
+                                                    ? 'bg-amber-100/80 text-amber-900'
+                                                    : 'bg-stone-100 text-stone-600'
+                                            }`}>
+                                                <Icon name="droplet" size={12} className={isCurrent || isPreview ? "text-amber-700" : "text-stone-400"} />
+                                                <span>{stage.detail}</span>
+                                            </div>
+                                            <div className={`text-xs sm:text-[11px] italic font-medium ${
+                                                isCurrent ? 'text-amber-700 font-semibold' : 'text-stone-400'
+                                            }`}>
+                                                {stage.effect}
+                                            </div>
                                         </div>
+
+                                        {/* 第一等分專屬：互動式酸甜風味比例切換器 */}
                                         {idx === 0 && !isDone && (
-                                            <div className={`mt-4 pt-4 border-t grid grid-cols-2 gap-3 ${isCurrent ? 'border-amber-200' : 'border-stone-50'}`}>
-                                                <div className="bg-white/80 p-3 sm:p-4 rounded-2xl border border-stone-100 text-center"><div className="text-[10px] sm:text-[9px] text-amber-600 font-black uppercase mb-1">酸感偏好 (+25%)</div><div className="text-stone-900 font-mono font-bold text-xl sm:text-lg">{current.range.max}<small className="text-xs sm:text-[10px] ml-0.5 sm:ml-1">ml</small></div></div>
-                                                <div className="bg-white/80 p-3 sm:p-4 rounded-2xl border border-stone-100 text-center"><div className="text-[10px] sm:text-[9px] text-amber-600 font-black uppercase mb-1">甜感偏好 (-25%)</div><div className="text-stone-900 font-mono font-bold text-xl sm:text-lg">{current.range.min}<small className="text-xs sm:text-[10px] ml-0.5 sm:ml-1">ml</small></div></div>
+                                            <div
+                                                onClick={(e) => e.stopPropagation()}
+                                                className={`mt-4 pt-4 border-t ${isCurrent ? 'border-amber-200/80' : 'border-stone-100'}`}
+                                            >
+                                                <div className="flex items-center justify-between mb-2.5">
+                                                    <span className="text-[11px] font-bold text-stone-500">
+                                                        🎯 點擊切換前兩段 (40%) 酸甜水量配比：
+                                                    </span>
+                                                    {flavorMode !== 'standard' && (
+                                                        <button
+                                                            onClick={() => setFlavorMode('standard')}
+                                                            className="text-[11px] font-bold text-amber-600 hover:text-amber-700 underline"
+                                                        >
+                                                            恢復標準 ({current.perStage}ml)
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <div className="grid grid-cols-3 gap-2.5">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFlavorMode('acidity')}
+                                                        className={`p-2.5 sm:p-3 rounded-2xl border text-center transition-all ${
+                                                            flavorMode === 'acidity'
+                                                                ? 'bg-amber-500/15 border-amber-500 ring-2 ring-amber-200 shadow-sm'
+                                                                : 'bg-white/90 border-stone-200/80 hover:border-amber-300'
+                                                        }`}
+                                                    >
+                                                        <div className="text-[10px] text-amber-700 font-black uppercase mb-0.5">酸感偏好 (+25%)</div>
+                                                        <div className="text-stone-900 font-mono font-bold text-base sm:text-lg">
+                                                            {current.range.max}<small className="text-[10px] ml-0.5">ml</small>
+                                                        </div>
+                                                        <div className="text-[10px] text-stone-400 font-mono">第二段 {current.perStage * 2 - current.range.max}ml</div>
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFlavorMode('standard')}
+                                                        className={`p-2.5 sm:p-3 rounded-2xl border text-center transition-all ${
+                                                            flavorMode === 'standard'
+                                                                ? 'bg-amber-500/15 border-amber-500 ring-2 ring-amber-200 shadow-sm'
+                                                                : 'bg-white/90 border-stone-200/80 hover:border-amber-300'
+                                                        }`}
+                                                    >
+                                                        <div className="text-[10px] text-amber-700 font-black uppercase mb-0.5">標準平衡</div>
+                                                        <div className="text-stone-900 font-mono font-bold text-base sm:text-lg">
+                                                            {current.perStage}<small className="text-[10px] ml-0.5">ml</small>
+                                                        </div>
+                                                        <div className="text-[10px] text-stone-400 font-mono">第二段 {current.perStage}ml</div>
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFlavorMode('sweetness')}
+                                                        className={`p-2.5 sm:p-3 rounded-2xl border text-center transition-all ${
+                                                            flavorMode === 'sweetness'
+                                                                ? 'bg-amber-500/15 border-amber-500 ring-2 ring-amber-200 shadow-sm'
+                                                                : 'bg-white/90 border-stone-200/80 hover:border-amber-300'
+                                                        }`}
+                                                    >
+                                                        <div className="text-[10px] text-amber-700 font-black uppercase mb-0.5">甜感偏好 (-25%)</div>
+                                                        <div className="text-stone-900 font-mono font-bold text-base sm:text-lg">
+                                                            {current.range.min}<small className="text-[10px] ml-0.5">ml</small>
+                                                        </div>
+                                                        <div className="text-[10px] text-stone-400 font-mono">第二段 {current.perStage * 2 - current.range.min}ml</div>
+                                                    </button>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -390,8 +1298,10 @@
                         </div>
 
                         <div className="p-8 bg-stone-50 border-t border-stone-100 flex items-center justify-center text-stone-300">
-                            <Icon name="info" size={16} className="mr-2" />
-                            <p className="text-xs sm:text-[11px] text-stone-400 italic">本指南採用四六沖法黃金比例，引導每一分注水的萃取細節。</p>
+                            <Icon name="info" size={16} className="mr-2 shrink-0 text-amber-600/70" />
+                            <p className="text-xs sm:text-[11px] text-stone-400 italic">
+                                本指南採用四六沖法黃金比例，引導每一分注水的萃取細節。
+                            </p>
                         </div>
                     </div>
 
