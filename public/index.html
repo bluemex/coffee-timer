@@ -11,8 +11,8 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="手沖職人指南">
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="apple-touch-icon" href="favicon.png">
+    <link rel="icon" type="image/png" href="favicon.png?v=20261024">
+    <link rel="apple-touch-icon" href="favicon.png?v=20261024">
 
     <!-- Open Graph / Social Meta -->
     <meta property="og:type" content="website">
@@ -1024,32 +1024,78 @@
                                         </svg>
                                         <div className="relative animate-float">
                                             <div className="absolute -inset-1 rounded-2xl bg-amber-500/20 blur-md" />
-                                            <img src="favicon.png" alt="Logo" className="relative w-12 h-12 md:w-14 md:h-14 rounded-2xl shadow-lg border border-stone-600/50" />
+                                            <img src="favicon.png?v=20261024" alt="Logo" className="relative w-14 h-14 md:w-16 md:h-16 rounded-2xl shadow-lg border border-stone-600/50 object-cover" />
                                         </div>
                                     </div>
                                 </div>
                                 )}
 
-                                {/* 粉水比參數快速切換器 */}
+                                {/* 粉水比參數與酸甜風味配比設定區 (開始沖煮前預先設定) */}
                                 {!isActive && (
-                                    <div className="flex bg-stone-900/60 p-1.5 rounded-2xl border border-stone-700/80 mb-7 gap-1.5">
-                                        {Object.keys(brewData).map(key => {
-                                            const active = target === key;
-                                            return (
-                                                <button
-                                                    key={key}
-                                                    onClick={() => { setTarget(key); setSeconds(0); }}
-                                                    className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${
-                                                        active
-                                                            ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-lg scale-[1.01]'
-                                                            : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/60'
-                                                    }`}
-                                                >
-                                                    <Icon name="coffee" size={14} />
-                                                    <span>{brewData[key].powder} 咖啡粉 / {brewData[key].totalWater}ml 水量</span>
-                                                </button>
-                                            );
-                                        })}
+                                    <div className="space-y-3 mb-7">
+                                        {/* 1. 選擇克數與水量 */}
+                                        <div className="flex bg-stone-900/60 p-1.5 rounded-2xl border border-stone-700/80 gap-1.5">
+                                            {Object.keys(brewData).map(key => {
+                                                const active = target === key;
+                                                return (
+                                                    <button
+                                                        key={key}
+                                                        type="button"
+                                                        onClick={() => { setTarget(key); setSeconds(0); }}
+                                                        className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${
+                                                            active
+                                                                ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-lg scale-[1.01]'
+                                                                : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/60'
+                                                        }`}
+                                                    >
+                                                        <Icon name="coffee" size={14} />
+                                                        <span>{brewData[key].powder} 咖啡粉 / {brewData[key].totalWater}ml 水量</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* 2. 選擇前兩段 (40%) 酸感 / 平衡 / 甜感配比 */}
+                                        <div className="bg-stone-900/60 p-2.5 rounded-2xl border border-stone-700/80">
+                                            <div className="flex items-center justify-between px-1 mb-2">
+                                                <span className="text-[11px] font-bold text-stone-300 flex items-center gap-1.5">
+                                                    <Icon name="droplet" size={12} className="text-amber-400" />
+                                                    前兩段 (40%) 風味定調配比
+                                                </span>
+                                                <span className="text-[10px] font-mono text-stone-400">
+                                                    前兩段合計：{current.perStage * 2}ml
+                                                </span>
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-1.5">
+                                                {[
+                                                    { id: 'acidity', label: '酸感偏好', sub: '+25%', s1: current.range.max, s2: current.perStage * 2 - current.range.max },
+                                                    { id: 'standard', label: '標準平衡', sub: '1 : 1', s1: current.perStage, s2: current.perStage },
+                                                    { id: 'sweetness', label: '甜感偏好', sub: '-25%', s1: current.range.min, s2: current.perStage * 2 - current.range.min }
+                                                ].map(opt => {
+                                                    const active = flavorMode === opt.id;
+                                                    return (
+                                                        <button
+                                                            key={opt.id}
+                                                            type="button"
+                                                            onClick={() => setFlavorMode(opt.id)}
+                                                            className={`py-2 px-2 rounded-xl border text-center transition-all ${
+                                                                active
+                                                                    ? 'bg-amber-500/20 border-amber-400 text-white shadow-sm ring-1 ring-amber-400/50'
+                                                                    : 'bg-stone-800/50 border-stone-700/70 text-stone-400 hover:text-stone-200 hover:border-stone-600'
+                                                            }`}
+                                                        >
+                                                            <div className="flex items-center justify-center gap-1 mb-0.5">
+                                                                <span className={`text-[11px] font-black ${active ? 'text-amber-300' : 'text-stone-300'}`}>{opt.label}</span>
+                                                                <span className={`text-[9px] font-mono px-1 rounded ${active ? 'bg-amber-500/30 text-amber-200' : 'bg-stone-700/70 text-stone-400'}`}>{opt.sub}</span>
+                                                            </div>
+                                                            <div className="font-mono text-[11px] font-bold text-stone-200">
+                                                                {opt.s1}ml <span className="text-stone-500">→</span> {opt.s2}ml
+                                                            </div>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
 
@@ -1187,17 +1233,33 @@
                                             })}
                                         </div>
 
-                                        {/* 手機版即時目標秤重 + 恆亮狀態提示 */}
+                                        {/* 手機版即時目標秤重 + 沖煮儀表板即時重選風味配比 */}
                                         {!isFinished && (
-                                            <div className="flex items-center justify-between text-[11px] text-stone-300 px-0.5">
+                                            <div className="flex items-center justify-between gap-2 flex-wrap text-[11px] text-stone-300 pt-0.5">
                                                 <span className="flex items-center gap-1.5 font-mono font-bold text-amber-300">
                                                     <Icon name="droplet" size={12} />
                                                     本段 +{stages[currentStageIdx].pourAmount}ml → 秤重目標 {stages[currentStageIdx].cumulativeWater}ml
                                                 </span>
-                                                <span className="text-[10px] text-stone-400 flex items-center gap-1">
-                                                    {wakeLockActive && <Icon name="sun" size={11} className="text-amber-400" />}
-                                                    總進度 {Math.round(totalProgressPct)}%
-                                                </span>
+                                                <div className="flex items-center gap-1 bg-stone-800/90 p-0.5 rounded-lg border border-stone-700/80">
+                                                    {[
+                                                        { id: 'acidity', short: `酸感 ${current.range.max}ml` },
+                                                        { id: 'standard', short: `平衡 ${current.perStage}ml` },
+                                                        { id: 'sweetness', short: `甜感 ${current.range.min}ml` }
+                                                    ].map(opt => (
+                                                        <button
+                                                            key={opt.id}
+                                                            type="button"
+                                                            onClick={() => setFlavorMode(opt.id)}
+                                                            className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                                                                flavorMode === opt.id
+                                                                    ? 'bg-amber-500 text-stone-950 shadow-sm'
+                                                                    : 'text-stone-400 hover:text-stone-200'
+                                                            }`}
+                                                        >
+                                                            {opt.short}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -1387,77 +1449,6 @@
                                                 )}
                                             </div>
                                         </div>
-
-                                        {/* 第一等分專屬：互動式酸甜風味比例切換器 */}
-                                        {idx === 0 && !isDone && (
-                                            <div
-                                                onClick={(e) => e.stopPropagation()}
-                                                className={`mt-4 pt-4 border-t ${isCurrent ? 'border-amber-200/80' : 'border-stone-100'}`}
-                                            >
-                                                <div className="flex items-center justify-between mb-2.5">
-                                                    <span className="text-[11px] font-bold text-stone-500">
-                                                        🎯 點擊切換前兩段 (40%) 酸甜水量配比：
-                                                    </span>
-                                                    {flavorMode !== 'standard' && (
-                                                        <button
-                                                            onClick={() => setFlavorMode('standard')}
-                                                            className="text-[11px] font-bold text-amber-600 hover:text-amber-700 underline"
-                                                        >
-                                                            恢復標準 ({current.perStage}ml)
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                <div className="grid grid-cols-3 gap-2.5">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setFlavorMode('acidity')}
-                                                        className={`p-2.5 sm:p-3 rounded-2xl border text-center transition-all ${
-                                                            flavorMode === 'acidity'
-                                                                ? 'bg-amber-500/15 border-amber-500 ring-2 ring-amber-200 shadow-sm'
-                                                                : 'bg-white/90 border-stone-200/80 hover:border-amber-300'
-                                                        }`}
-                                                    >
-                                                        <div className="text-[10px] text-amber-700 font-black uppercase mb-0.5">酸感偏好 (+25%)</div>
-                                                        <div className="text-stone-900 font-mono font-bold text-base sm:text-lg">
-                                                            {current.range.max}<small className="text-[10px] ml-0.5">ml</small>
-                                                        </div>
-                                                        <div className="text-[10px] text-stone-400 font-mono">第二段 {current.perStage * 2 - current.range.max}ml</div>
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setFlavorMode('standard')}
-                                                        className={`p-2.5 sm:p-3 rounded-2xl border text-center transition-all ${
-                                                            flavorMode === 'standard'
-                                                                ? 'bg-amber-500/15 border-amber-500 ring-2 ring-amber-200 shadow-sm'
-                                                                : 'bg-white/90 border-stone-200/80 hover:border-amber-300'
-                                                        }`}
-                                                    >
-                                                        <div className="text-[10px] text-amber-700 font-black uppercase mb-0.5">標準平衡</div>
-                                                        <div className="text-stone-900 font-mono font-bold text-base sm:text-lg">
-                                                            {current.perStage}<small className="text-[10px] ml-0.5">ml</small>
-                                                        </div>
-                                                        <div className="text-[10px] text-stone-400 font-mono">第二段 {current.perStage}ml</div>
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setFlavorMode('sweetness')}
-                                                        className={`p-2.5 sm:p-3 rounded-2xl border text-center transition-all ${
-                                                            flavorMode === 'sweetness'
-                                                                ? 'bg-amber-500/15 border-amber-500 ring-2 ring-amber-200 shadow-sm'
-                                                                : 'bg-white/90 border-stone-200/80 hover:border-amber-300'
-                                                        }`}
-                                                    >
-                                                        <div className="text-[10px] text-amber-700 font-black uppercase mb-0.5">甜感偏好 (-25%)</div>
-                                                        <div className="text-stone-900 font-mono font-bold text-base sm:text-lg">
-                                                            {current.range.min}<small className="text-[10px] ml-0.5">ml</small>
-                                                        </div>
-                                                        <div className="text-[10px] text-stone-400 font-mono">第二段 {current.perStage * 2 - current.range.min}ml</div>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                 );
                             })}
