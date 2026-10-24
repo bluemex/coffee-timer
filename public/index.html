@@ -1049,15 +1049,8 @@
                                             {isActive && !isFinished && (
                                                 <React.Fragment>
                                                     <span className={`w-2 h-2 rounded-full shrink-0 ${isStageEndingSoon ? 'bg-red-400 animate-ping' : 'bg-amber-400 animate-pulse'}`} />
-                                                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase whitespace-nowrap">
-                                                        Stage {currentStageIdx + 1}/5
-                                                    </span>
-                                                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border whitespace-nowrap ${
-                                                        isStageEndingSoon
-                                                            ? 'bg-red-500/20 text-red-300 border-red-500/40 animate-pulse'
-                                                            : 'bg-stone-800 text-stone-300 border-stone-700'
-                                                    }`}>
-                                                        倒數 {stageRemaining}s
+                                                    <span className="text-[11px] font-mono font-extrabold text-amber-300 uppercase tracking-wider whitespace-nowrap">
+                                                        Stage {currentStageIdx + 1} / 5
                                                     </span>
                                                 </React.Fragment>
                                             )}
@@ -1156,16 +1149,20 @@
                                             })}
                                         </div>
 
-                                        {/* 即時目標秤重 + 寬版好按的酸甜平衡切換列 */}
+                                        {/* 即時目標秤重 + 本段倒數標籤 + 寬版好按的酸甜平衡切換列 */}
                                         {!isFinished && (
                                             <div className="space-y-2 pt-0.5">
-                                                <div className="flex items-center justify-between text-xs text-stone-300 px-0.5">
+                                                <div className="flex items-center justify-between gap-2 text-xs text-stone-300 px-0.5">
                                                     <span className="flex items-center gap-1.5 font-mono font-bold text-amber-300 whitespace-nowrap">
                                                         <Icon name="droplet" size={13} />
-                                                        本段 +{stages[currentStageIdx].pourAmount}ml → 秤重目標 {stages[currentStageIdx].cumulativeWater}ml
+                                                        本段 +{stages[currentStageIdx].pourAmount}ml → 目標 {stages[currentStageIdx].cumulativeWater}ml
                                                     </span>
-                                                    <span className="text-[11px] font-mono text-stone-400 whitespace-nowrap">
-                                                        總進度 {Math.round(totalProgressPct)}%
+                                                    <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-md border whitespace-nowrap shrink-0 ${
+                                                        isStageEndingSoon
+                                                            ? 'bg-red-500/20 text-red-300 border-red-500/40 animate-pulse'
+                                                            : 'bg-stone-800 text-amber-200 border-stone-700'
+                                                    }`}>
+                                                        本段倒數 {stageRemaining}s
                                                     </span>
                                                 </div>
 
