@@ -193,7 +193,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef, useMemo, useCallback } = React;
+        const { useState, useEffect, useRef, useMemo } = React;
 
         // 自定義 SVG 圖示組件
         const Icon = ({ name, size = 24, className = "" }) => {
@@ -656,13 +656,11 @@
             const [seconds, setSeconds] = useState(0);
             const [isActive, setIsActive] = useState(false);
             const [previewIdx, setPreviewIdx] = useState(0);
-            const [soundEnabled, setSoundEnabled] = useState(true);
             const [wakeLockActive, setWakeLockActive] = useState(false);
 
             const timerIntervalRef = useRef(null);
             const stickyHeaderRef = useRef(null);
             const stageRefs = useRef([]);
-            const audioCtxRef = useRef(null);
             const wakeLockRef = useRef(null);
 
             const brewData = {
@@ -693,54 +691,6 @@
                     ]
                 };
             }, [current, flavorMode]);
-
-            // Web Audio API 溫潤職人提示音合成器 (無須外部音檔)
-            const playTone = useCallback((type) => {
-                if (!soundEnabled) return;
-                try {
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    if (!AudioContext) return;
-                    if (!audioCtxRef.current) {
-                        audioCtxRef.current = new AudioContext();
-                    }
-                    const ctx = audioCtxRef.current;
-                    if (ctx.state === 'suspended') {
-                        ctx.resume();
-                    }
-
-                    const now = ctx.currentTime;
-                    const playNote = (freq, startTime, duration, peakGain = 0.12) => {
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(freq, startTime);
-                        gain.gain.setValueAtTime(0.0001, startTime);
-                        gain.gain.exponentialRampToValueAtTime(peakGain, startTime + 0.02);
-                        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-                        osc.connect(gain);
-                        gain.connect(ctx.destination);
-                        osc.start(startTime);
-                        osc.stop(startTime + duration + 0.02);
-                    };
-
-                    if (type === 'start') {
-                        playNote(523.25, now, 0.25, 0.12);       // C5
-                        playNote(659.25, now + 0.12, 0.4, 0.14); // E5
-                    } else if (type === 'tick') {
-                        playNote(440, now, 0.09, 0.06);          // A4 輕柔預備拍
-                    } else if (type === 'stage') {
-                        playNote(587.33, now, 0.22, 0.13);       // D5
-                        playNote(880, now + 0.12, 0.45, 0.15);   // A5 換段頌缽音
-                    } else if (type === 'finish') {
-                        playNote(523.25, now, 0.25, 0.12);       // C5
-                        playNote(659.25, now + 0.12, 0.25, 0.12);// E5
-                        playNote(783.99, now + 0.24, 0.3, 0.13); // G5
-                        playNote(1046.5, now + 0.36, 0.65, 0.16);// C6 完成和弦
-                    }
-                } catch (e) {
-                    // 忽略瀏覽器未互動前的自動播放限制
-                }
-            }, [soundEnabled]);
 
             // 螢幕恆亮控制 (Screen Wake Lock API)
             useEffect(() => {
@@ -786,18 +736,6 @@
                 return () => clearInterval(timerIntervalRef.current);
             }, [isActive]);
 
-            // 階段換段與倒數音效觸發
-            useEffect(() => {
-                if (!isActive || seconds === 0) return;
-                if (seconds === 225) {
-                    playTone('finish');
-                } else if (seconds < 225 && seconds % 45 === 0) {
-                    playTone('stage');
-                } else if (seconds < 225 && (seconds % 45 === 42 || seconds % 45 === 43 || seconds % 45 === 44)) {
-                    playTone('tick');
-                }
-            }, [seconds, isActive, playTone]);
-
             const isFinished = isActive && seconds >= 225; // 45 * 5 = 225s (3:45)
             const currentStageIdx = isFinished ? 4 : Math.min(Math.floor(seconds / 45), 4);
             const stageElapsed = isFinished ? 45 : (seconds % 45);
@@ -810,9 +748,6 @@
                 if (isFinished) {
                     resetTimer();
                 } else {
-                    if (!isActive && seconds === 0) {
-                        playTone('start');
-                    }
                     setIsActive(!isActive);
                 }
             };
@@ -832,10 +767,8 @@
                 if (currentStageIdx < 4) {
                     const nextStartSecs = (currentStageIdx + 1) * 45;
                     setSeconds(nextStartSecs);
-                    playTone('stage');
                 } else {
                     setSeconds(225);
-                    playTone('finish');
                 }
             };
 
@@ -845,8 +778,6 @@
                 setSeconds(targetSecs);
                 if (!isActive) {
                     setPreviewIdx(targetIdx);
-                } else {
-                    playTone('stage');
                 }
             };
 
@@ -1032,9 +963,9 @@
 
                                 {/* 粉水比參數與酸甜風味配比設定區 (開始沖煮前預先設定) */}
                                 {!isActive && (
-                                    <div className="space-y-3 mb-7">
+                                    <div className="space-y-3.5 mb-7">
                                         {/* 1. 選擇克數與水量 */}
-                                        <div className="flex bg-stone-900/60 p-1.5 rounded-2xl border border-stone-700/80 gap-1.5">
+                                        <div className="flex bg-stone-900/60 p-1.5 rounded-2xl border border-stone-700/80 gap-2">
                                             {Object.keys(brewData).map(key => {
                                                 const active = target === key;
                                                 return (
@@ -1042,31 +973,31 @@
                                                         key={key}
                                                         type="button"
                                                         onClick={() => { setTarget(key); setSeconds(0); }}
-                                                        className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${
+                                                        className={`flex-1 py-3 px-3 rounded-xl text-xs sm:text-sm font-black transition-all active:scale-[0.98] flex items-center justify-center gap-2 whitespace-nowrap ${
                                                             active
-                                                                ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-lg scale-[1.01]'
+                                                                ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-lg'
                                                                 : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/60'
                                                         }`}
                                                     >
-                                                        <Icon name="coffee" size={14} />
-                                                        <span>{brewData[key].powder} 咖啡粉 / {brewData[key].totalWater}ml 水量</span>
+                                                        <Icon name="coffee" size={15} />
+                                                        <span>{brewData[key].powder} 咖啡粉 / {brewData[key].totalWater}ml</span>
                                                     </button>
                                                 );
                                             })}
                                         </div>
 
                                         {/* 2. 選擇前兩段 (40%) 酸感 / 平衡 / 甜感配比 */}
-                                        <div className="bg-stone-900/60 p-2.5 rounded-2xl border border-stone-700/80">
-                                            <div className="flex items-center justify-between px-1 mb-2">
-                                                <span className="text-[11px] font-bold text-stone-300 flex items-center gap-1.5">
-                                                    <Icon name="droplet" size={12} className="text-amber-400" />
+                                        <div className="bg-stone-900/60 p-3 rounded-2xl border border-stone-700/80">
+                                            <div className="flex items-center justify-between px-1 mb-2.5">
+                                                <span className="text-xs font-bold text-stone-300 flex items-center gap-1.5">
+                                                    <Icon name="droplet" size={13} className="text-amber-400" />
                                                     前兩段 (40%) 風味定調配比
                                                 </span>
-                                                <span className="text-[10px] font-mono text-stone-400">
+                                                <span className="text-[11px] font-mono text-stone-400">
                                                     前兩段合計：{current.perStage * 2}ml
                                                 </span>
                                             </div>
-                                            <div className="grid grid-cols-3 gap-1.5">
+                                            <div className="grid grid-cols-3 gap-2">
                                                 {[
                                                     { id: 'acidity', label: '酸感偏好', sub: '+25%', s1: current.range.max, s2: current.perStage * 2 - current.range.max },
                                                     { id: 'standard', label: '標準平衡', sub: '1 : 1', s1: current.perStage, s2: current.perStage },
@@ -1078,18 +1009,18 @@
                                                             key={opt.id}
                                                             type="button"
                                                             onClick={() => setFlavorMode(opt.id)}
-                                                            className={`py-2 px-1.5 sm:px-2 rounded-xl border text-center transition-all ${
+                                                            className={`py-3 px-2 rounded-xl border text-center transition-all active:scale-[0.97] ${
                                                                 active
-                                                                    ? 'bg-amber-500/20 border-amber-400 text-white shadow-sm ring-1 ring-amber-400/50'
-                                                                    : 'bg-stone-800/50 border-stone-700/70 text-stone-400 hover:text-stone-200 hover:border-stone-600'
+                                                                    ? 'bg-amber-500/20 border-amber-400 text-white shadow-md ring-1 ring-amber-400/60'
+                                                                    : 'bg-stone-800/60 border-stone-700/70 text-stone-400 hover:text-stone-200 hover:border-stone-600'
                                                             }`}
                                                         >
-                                                            <div className="flex items-center justify-center gap-1 mb-0.5">
-                                                                <span className={`text-[11px] font-black whitespace-nowrap ${active ? 'text-amber-300' : 'text-stone-300'}`}>{opt.label}</span>
-                                                                <span className={`hidden sm:inline-block text-[9px] font-mono px-1 rounded whitespace-nowrap ${active ? 'bg-amber-500/30 text-amber-200' : 'bg-stone-700/70 text-stone-400'}`}>{opt.sub}</span>
+                                                            <div className="flex items-center justify-center gap-1 mb-1">
+                                                                <span className={`text-xs sm:text-sm font-black whitespace-nowrap ${active ? 'text-amber-300' : 'text-stone-200'}`}>{opt.label}</span>
+                                                                <span className={`hidden sm:inline-block text-[10px] font-mono px-1 rounded whitespace-nowrap ${active ? 'bg-amber-500/30 text-amber-200' : 'bg-stone-700/70 text-stone-400'}`}>{opt.sub}</span>
                                                             </div>
-                                                            <div className="font-mono text-[10px] sm:text-[11px] font-bold text-stone-200 whitespace-nowrap">
-                                                                {opt.s1}ml <span className="text-stone-500">→</span> {opt.s2}ml
+                                                            <div className="font-mono text-xs sm:text-sm font-bold text-stone-100 whitespace-nowrap">
+                                                                {opt.s1} <span className="text-amber-500/80">→</span> {opt.s2}<small className="text-[10px] ml-0.5 text-stone-400">ml</small>
                                                             </div>
                                                         </button>
                                                     );
@@ -1154,32 +1085,19 @@
                                         </div>
                                     </div>
 
-                                    {/* 音效切換、重置、下一段、開始/暫停控制鍵 */}
-                                    <div className="flex gap-1.5 sm:gap-2 items-center shrink-0">
-                                        <button
-                                            onClick={() => setSoundEnabled(!soundEnabled)}
-                                            title={soundEnabled ? "關閉階段提示音" : "開啟階段提示音"}
-                                            aria-label={soundEnabled ? "關閉階段提示音" : "開啟階段提示音"}
-                                            className={`rounded-full flex items-center justify-center transition-all border shrink-0 ${
-                                                soundEnabled
-                                                    ? 'bg-stone-700/80 border-amber-500/40 text-amber-400 hover:bg-stone-700'
-                                                    : 'bg-stone-800/80 border-stone-700 text-stone-500 hover:text-stone-300'
-                                            } ${isActive ? 'w-8 h-8 sm:w-9 sm:h-9' : 'w-9 h-9 sm:w-10 sm:h-10'}`}
-                                        >
-                                            <Icon name={soundEnabled ? "volume-2" : "volume-x"} size={isActive ? 14 : 16} />
-                                        </button>
-
+                                    {/* 重置、下一段、開始/暫停控制鍵 (加大手機觸控面積) */}
+                                    <div className="flex gap-2 sm:gap-2.5 items-center shrink-0">
                                         <button
                                             onClick={resetTimer}
                                             title="重置計時器"
                                             aria-label="重置計時器"
-                                            className={`rounded-full flex items-center justify-center transition-all border border-stone-700 shrink-0 ${
+                                            className={`rounded-full flex items-center justify-center transition-all active:scale-95 border border-stone-700 shrink-0 ${
                                                 isActive
-                                                    ? 'w-8 h-8 sm:w-9 sm:h-9 bg-stone-800 text-stone-400 hover:text-white hover:bg-stone-700'
-                                                    : 'w-9 h-9 sm:w-10 sm:h-10 bg-stone-700/80 text-stone-300 hover:bg-stone-600 hover:text-white'
+                                                    ? 'w-10 h-10 sm:w-11 sm:h-11 bg-stone-800 text-stone-300 hover:text-white hover:bg-stone-700'
+                                                    : 'w-11 h-11 sm:w-12 sm:h-12 bg-stone-700/80 text-stone-300 hover:bg-stone-600 hover:text-white'
                                             }`}
                                         >
-                                            <Icon name="rotate-ccw" size={isActive ? 14 : 16} />
+                                            <Icon name="rotate-ccw" size={isActive ? 17 : 19} />
                                         </button>
 
                                         {isActive && !isFinished && (
@@ -1187,24 +1105,24 @@
                                                 onClick={skipToNextStage}
                                                 title={currentStageIdx < 4 ? `跳至第 ${currentStageIdx + 2} 等分` : "直接完成沖煮"}
                                                 aria-label={currentStageIdx < 4 ? `跳至第 ${currentStageIdx + 2} 等分` : "直接完成沖煮"}
-                                                className="rounded-full px-2.5 sm:px-3.5 py-2 bg-stone-700/90 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 transition-all active:scale-95 flex items-center gap-1 text-[11px] sm:text-xs font-bold shadow whitespace-nowrap shrink-0"
+                                                className="rounded-full px-3.5 sm:px-4 py-2.5 sm:py-3 bg-stone-700/90 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 transition-all active:scale-95 flex items-center gap-1.5 text-xs sm:text-sm font-bold shadow whitespace-nowrap shrink-0"
                                             >
-                                                <Icon name="skip-forward" size={12} />
+                                                <Icon name="skip-forward" size={14} />
                                                 <span>{currentStageIdx < 4 ? '下一段' : '完成'}</span>
                                             </button>
                                         )}
 
                                         <button
                                             onClick={toggleTimer}
-                                            className={`rounded-full shadow-lg transition-all active:scale-95 flex items-center gap-1.5 font-black whitespace-nowrap shrink-0 ${
+                                            className={`rounded-full shadow-lg transition-all active:scale-95 flex items-center gap-2 font-black whitespace-nowrap shrink-0 ${
                                                 isActive
                                                     ? isFinished
-                                                        ? 'bg-amber-500 px-3.5 sm:px-5 py-2 text-xs text-stone-900 animate-pulse'
-                                                        : 'bg-red-500 hover:bg-red-600 px-3.5 sm:px-5 py-2 text-xs text-white'
-                                                    : 'bg-gradient-to-r from-amber-600 to-amber-500 px-4 sm:px-7 py-2.5 sm:py-3 text-xs sm:text-sm text-white hover:from-amber-500 hover:to-amber-400 shadow-amber-900/30'
+                                                        ? 'bg-amber-500 px-5 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm text-stone-900 animate-pulse'
+                                                        : 'bg-red-500 hover:bg-red-600 px-5 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm text-white'
+                                                    : 'bg-gradient-to-r from-amber-600 to-amber-500 px-6 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base text-white hover:from-amber-500 hover:to-amber-400 shadow-amber-900/30'
                                             }`}
                                         >
-                                            <Icon name={isActive ? (isFinished ? "rotate-ccw" : "pause") : "play"} size={isActive ? 13 : 16} />
+                                            <Icon name={isActive ? (isFinished ? "rotate-ccw" : "pause") : "play"} size={isActive ? 15 : 18} />
                                             <span>{isActive ? (isFinished ? '完成沖煮' : '暫停') : (seconds > 0 ? '繼續沖煮' : '開始沖煮')}</span>
                                         </button>
                                     </div>
@@ -1212,7 +1130,7 @@
 
                                 {/* 沖煮進行中的五階段進度膠囊與即時資訊列 */}
                                 {isActive && (
-                                    <div className="mt-3.5 space-y-2">
+                                    <div className="mt-3.5 space-y-2.5">
                                         {/* 5 段式進度軌 (點擊可快速跳至該階段) */}
                                         <div className="grid grid-cols-5 gap-1.5">
                                             {stages.map((st, idx) => {
@@ -1225,7 +1143,7 @@
                                                         type="button"
                                                         onClick={() => jumpToStage(idx)}
                                                         title={`跳至第 ${idx + 1} 等分`}
-                                                        className="h-2 rounded-full bg-stone-700/80 hover:bg-stone-600 overflow-hidden cursor-pointer transition-colors"
+                                                        className="h-2.5 rounded-full bg-stone-700/80 hover:bg-stone-600 overflow-hidden cursor-pointer transition-colors"
                                                     >
                                                         <div
                                                             className={`h-full rounded-full transition-all duration-500 ${
@@ -1238,30 +1156,36 @@
                                             })}
                                         </div>
 
-                                        {/* 手機版即時目標秤重 + 沖煮儀表板即時重選風味配比 */}
+                                        {/* 即時目標秤重 + 寬版好按的酸甜平衡切換列 */}
                                         {!isFinished && (
-                                            <div className="flex items-center justify-between gap-1.5 text-[11px] text-stone-300 pt-0.5">
-                                                <span className="flex items-center gap-1 font-mono font-bold text-amber-300 whitespace-nowrap">
-                                                    <Icon name="droplet" size={11} />
-                                                    +{stages[currentStageIdx].pourAmount}ml → 目標 {stages[currentStageIdx].cumulativeWater}ml
-                                                </span>
-                                                <div className="flex items-center gap-0.5 bg-stone-800/90 p-0.5 rounded-lg border border-stone-700/80 shrink-0">
+                                            <div className="space-y-2 pt-0.5">
+                                                <div className="flex items-center justify-between text-xs text-stone-300 px-0.5">
+                                                    <span className="flex items-center gap-1.5 font-mono font-bold text-amber-300 whitespace-nowrap">
+                                                        <Icon name="droplet" size={13} />
+                                                        本段 +{stages[currentStageIdx].pourAmount}ml → 秤重目標 {stages[currentStageIdx].cumulativeWater}ml
+                                                    </span>
+                                                    <span className="text-[11px] font-mono text-stone-400 whitespace-nowrap">
+                                                        總進度 {Math.round(totalProgressPct)}%
+                                                    </span>
+                                                </div>
+
+                                                <div className="grid grid-cols-3 gap-1.5 bg-stone-800/90 p-1 rounded-xl border border-stone-700/80">
                                                     {[
-                                                        { id: 'acidity', short: '酸感' },
-                                                        { id: 'standard', short: '平衡' },
-                                                        { id: 'sweetness', short: '甜感' }
+                                                        { id: 'acidity', label: `酸感 (${current.range.max}ml)` },
+                                                        { id: 'standard', label: `平衡 (${current.perStage}ml)` },
+                                                        { id: 'sweetness', label: `甜感 (${current.range.min}ml)` }
                                                     ].map(opt => (
                                                         <button
                                                             key={opt.id}
                                                             type="button"
                                                             onClick={() => setFlavorMode(opt.id)}
-                                                            className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all whitespace-nowrap ${
+                                                            className={`py-2 px-2 rounded-lg text-xs font-bold transition-all active:scale-95 whitespace-nowrap ${
                                                                 flavorMode === opt.id
-                                                                    ? 'bg-amber-500 text-stone-950 shadow-sm'
-                                                                    : 'text-stone-400 hover:text-stone-200'
+                                                                    ? 'bg-amber-500 text-stone-950 shadow-sm font-black'
+                                                                    : 'text-stone-300 hover:text-white hover:bg-stone-700/60'
                                                             }`}
                                                         >
-                                                            {opt.short}
+                                                            {opt.label}
                                                         </button>
                                                     ))}
                                                 </div>
@@ -1434,10 +1358,10 @@
                                                             e.stopPropagation();
                                                             skipToNextStage();
                                                         }}
-                                                        className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-600 hover:bg-amber-500 text-white shadow-sm transition-all active:scale-95 whitespace-nowrap shrink-0"
+                                                        className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full bg-amber-600 hover:bg-amber-500 text-white shadow-sm transition-all active:scale-95 whitespace-nowrap shrink-0"
                                                     >
                                                         <span>{idx < 4 ? '跳至下一段' : '完成沖煮'}</span>
-                                                        <Icon name="skip-forward" size={11} />
+                                                        <Icon name="skip-forward" size={12} />
                                                     </button>
                                                 )}
                                                 {isActive && !isFinished && !isCurrent && (
@@ -1447,7 +1371,7 @@
                                                             e.stopPropagation();
                                                             jumpToStage(idx);
                                                         }}
-                                                        className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-stone-100 hover:bg-amber-100 text-stone-500 hover:text-amber-800 border border-stone-200 transition-all whitespace-nowrap shrink-0"
+                                                        className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full bg-stone-100 hover:bg-amber-100 text-stone-600 hover:text-amber-800 border border-stone-200 transition-all active:scale-95 whitespace-nowrap shrink-0"
                                                     >
                                                         <span>跳至此段</span>
                                                     </button>
