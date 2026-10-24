@@ -653,10 +653,20 @@
         function App() {
             const [target, setTarget] = useState('300');
             const [flavorMode, setFlavorMode] = useState('standard'); // 'standard' | 'acidity' | 'sweetness'
-            const [seconds, setSeconds] = useState(0);
+            const [timer, setTimer] = useState({
+                totalSeconds: 0,
+                stageIdx: 0,
+                stageSeconds: 0,
+                isFinished: false
+            });
             const [isActive, setIsActive] = useState(false);
             const [previewIdx, setPreviewIdx] = useState(0);
             const [wakeLockActive, setWakeLockActive] = useState(false);
+
+            const seconds = timer.totalSeconds;
+            const currentStageIdx = timer.stageIdx;
+            const stageElapsed = timer.stageSeconds;
+            const isFinished = isActive && timer.isFinished;
 
             const timerIntervalRef = useRef(null);
             const stickyHeaderRef = useRef(null);
@@ -696,7 +706,7 @@
             useEffect(() => {
                 let isMounted = true;
                 const requestWakeLock = async () => {
-                    if ('wakeLock' in navigator && isActive && seconds <= 225) {
+                    if ('wakeLock' in navigator && isActive && !isFinished) {
                         try {
                             wakeLockRef.current = await navigator.wakeLock.request('screen');
                             if (isMounted) setWakeLockActive(true);
@@ -722,26 +732,48 @@
                         wakeLockRef.current = null;
                     }
                 };
-            }, [isActive, seconds <= 225]);
+            }, [isActive, isFinished]);
 
-            // 計時器主引擎
+            // 計時器主引擎：總時間連續累加，階段時間每滿 45 秒自動推進下一段
             useEffect(() => {
-                if (isActive) {
+                if (isActive && !timer.isFinished) {
                     timerIntervalRef.current = setInterval(() => {
-                        setSeconds(s => s + 1);
+                        setTimer(prev => {
+                            if (prev.isFinished) return prev;
+                            const nextTotal = prev.totalSeconds + 1;
+                            const nextStageSecs = prev.stageSeconds + 1;
+                            if (nextStageSecs >= 45) {
+                                if (prev.stageIdx < 4) {
+                                    return {
+                                        totalSeconds: nextTotal,
+                                        stageIdx: prev.stageIdx + 1,
+                                        stageSeconds: 0,
+                                        isFinished: false
+                                    };
+                                } else {
+                                    return {
+                                        totalSeconds: nextTotal,
+                                        stageIdx: 4,
+                                        stageSeconds: 45,
+                                        isFinished: true
+                                    };
+                                }
+                            }
+                            return {
+                                ...prev,
+                                totalSeconds: nextTotal,
+                                stageSeconds: nextStageSecs
+                            };
+                        });
                     }, 1000);
                 } else {
                     clearInterval(timerIntervalRef.current);
                 }
                 return () => clearInterval(timerIntervalRef.current);
-            }, [isActive]);
+            }, [isActive, timer.isFinished]);
 
-            const isFinished = isActive && seconds >= 225; // 45 * 5 = 225s (3:45)
-            const currentStageIdx = isFinished ? 4 : Math.min(Math.floor(seconds / 45), 4);
-            const stageElapsed = isFinished ? 45 : (seconds % 45);
-            const stageRemaining = isFinished ? 0 : (45 - stageElapsed);
+            const stageRemaining = isFinished ? 0 : Math.max(0, 45 - stageElapsed);
             const stageProgressPct = isFinished ? 100 : Math.min((stageElapsed / 45) * 100, 100);
-            const totalProgressPct = Math.min((seconds / 225) * 100, 100);
             const isStageEndingSoon = isActive && !isFinished && stageRemaining <= 5;
 
             const toggleTimer = () => {
@@ -754,28 +786,48 @@
 
             const resetTimer = () => {
                 setIsActive(false);
-                setSeconds(0);
+                setTimer({
+                    totalSeconds: 0,
+                    stageIdx: 0,
+                    stageSeconds: 0,
+                    isFinished: false
+                });
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
 
-            // 跳往下一階段（或直接跳至指定階段）
+            // 跳往下一階段：不補滿該段剩餘秒數，總計時直接接續，並立即開始下一段的 45 秒計時
             const skipToNextStage = () => {
                 if (isFinished) return;
                 if (!isActive) {
                     setIsActive(true);
                 }
-                if (currentStageIdx < 4) {
-                    const nextStartSecs = (currentStageIdx + 1) * 45;
-                    setSeconds(nextStartSecs);
-                } else {
-                    setSeconds(225);
-                }
+                setTimer(prev => {
+                    if (prev.stageIdx < 4) {
+                        return {
+                            ...prev,
+                            stageIdx: prev.stageIdx + 1,
+                            stageSeconds: 0,
+                            isFinished: false
+                        };
+                    } else {
+                        return {
+                            ...prev,
+                            stageIdx: 4,
+                            stageSeconds: 45,
+                            isFinished: true
+                        };
+                    }
+                });
             };
 
             const jumpToStage = (targetIdx) => {
                 if (targetIdx < 0 || targetIdx > 4) return;
-                const targetSecs = targetIdx * 45;
-                setSeconds(targetSecs);
+                setTimer(prev => ({
+                    ...prev,
+                    stageIdx: targetIdx,
+                    stageSeconds: 0,
+                    isFinished: false
+                }));
                 if (!isActive) {
                     setPreviewIdx(targetIdx);
                 }
@@ -972,7 +1024,7 @@
                                                     <button
                                                         key={key}
                                                         type="button"
-                                                        onClick={() => { setTarget(key); setSeconds(0); }}
+                                                        onClick={() => { setTarget(key); resetTimer(); }}
                                                         className={`flex-1 py-3 px-3 rounded-xl text-xs sm:text-sm font-black transition-all active:scale-[0.98] flex items-center justify-center gap-2 whitespace-nowrap ${
                                                             active
                                                                 ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-lg'
@@ -1217,7 +1269,7 @@
                                 {isFinished && (
                                     <div className="mt-4 bg-gradient-to-r from-amber-500/20 via-amber-400/15 to-amber-500/20 border border-amber-400/40 p-3.5 rounded-2xl text-center animate-[fadeIn_0.5s_ease-out]">
                                         <p className="text-amber-300 text-xs sm:text-sm font-bold">
-                                            🎉 3:45 黃金萃取完成！請將濾杯移開並搖勻咖啡液，享受手沖的美好風味。
+                                            🎉 {formatTime(seconds)} 黃金萃取完成！請將濾杯移開並搖勻咖啡液，享受手沖的美好風味。
                                         </p>
                                         <p className="text-stone-300 text-[11px] mt-1 font-mono">
                                             本次參數：{current.powder} 咖啡粉 · {current.totalWater}ml 水量 · {flavorLabelMap[flavorMode]}
